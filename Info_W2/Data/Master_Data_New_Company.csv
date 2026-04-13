@@ -1,0 +1,505 @@
+﻿Customer ID;Customer Name;Channel;Customer Tier
+LC000001;FitNest AT Online #0001;E-commerce;S
+LC000002;VitaBox AT Online #0002;E-commerce;M
+LC000003;VitaBox AT Online #0003;E-commerce;S
+LC000004;PulseMarket AT Online #0004;E-commerce;S
+LC000005;VitaBox AT Online #0005;E-commerce;S
+LC000006;FitNest AT Online #0006;E-commerce;S
+LC000007;CarePharm AT #0007;Pharmacy;S
+LC000008;EuroPharmx AT #0008;Pharmacy;M
+LC000009;EuroPharmx AT #0009;Pharmacy;L
+LC000010;Carrefouk AT #0010;Retail;L
+LC000011;Carrefouk AT #0011;Retail;M
+LC000012;Aldii AT #0012;Retail;M
+LC000013;FitZone AT #0013;Retail Sport;L
+LC000014;Intersportt AT #0014;Retail Sport;M
+LC000015;Decatlon AT #0015;Retail Sport;M
+LC000016;Decathlonn AT #0016;Retail Sport;M
+LC000017;Decathlonn AT #0017;Retail Sport;M
+LC000018;Decathlonn AT #0018;Retail Sport;L
+LC000019;ProSport AT #0019;Retail Sport;L
+LC000020;Decatlon AT #0020;Retail Sport;M
+LC000021;Intersportt AT #0021;Retail Sport;M
+LC000022;VitaBox BE Online #0022;E-commerce;M
+LC000023;PrimeFuel BE Online #0023;E-commerce;M
+LC000024;VitaBox BE Online #0024;E-commerce;M
+LC000025;GymMart BE Online #0025;E-commerce;M
+LC000026;PulseMarket BE Online #0026;E-commerce;M
+LC000027;PrimeFuel BE Online #0027;E-commerce;S
+LC000028;CarePharm BE #0028;Pharmacy;S
+LC000029;NutriPharm BE #0029;Pharmacy;S
+LC000030;VitaCare BE #0030;Pharmacy;L
+LC000031;Carrefouk BE #0031;Retail;L
+LC000032;Tesko BE #0032;Retail;M
+LC000033;Rewee BE #0033;Retail;L
+LC000034;Decatlon BE #0034;Retail Sport;L
+LC000035;Decatlon BE #0035;Retail Sport;L
+LC000036;Decatlon BE #0036;Retail Sport;S
+LC000037;Intersportt BE #0037;Retail Sport;L
+LC000038;Decathlonn BE #0038;Retail Sport;M
+LC000039;FitZone BE #0039;Retail Sport;M
+LC000040;ProSport BE #0040;Retail Sport;L
+LC000041;SportDirekt BE #0041;Retail Sport;L
+LC000042;Intersportt BE #0042;Retail Sport;M
+LC000043;VitaBox BG Online #0043;E-commerce;M
+LC000044;FitNest BG Online #0044;E-commerce;S
+LC000045;FitNest BG Online #0045;E-commerce;L
+LC000046;GymMart BG Online #0046;E-commerce;S
+LC000047;CarePharm BG #0047;Pharmacy;M
+LC000048;EuroPharmx BG #0048;Pharmacy;L
+LC000049;Carrefouk BG #0049;Retail;L
+LC000050;Tesko BG #0050;Retail;M
+LC000051;Decathlonn BG #0051;Retail Sport;L
+LC000052;ProSport BG #0052;Retail Sport;S
+LC000053;ProSport BG #0053;Retail Sport;M
+LC000054;FitZone BG #0054;Retail Sport;S
+LC000055;ProSport BG #0055;Retail Sport;S
+LC000056;Decatlon BG #0056;Retail Sport;L
+LC000057;GymMart CY Online #0057;E-commerce;M
+LC000058;PrimeFuel CY Online #0058;E-commerce;L
+LC000059;VitaBox CY Online #0059;E-commerce;S
+LC000060;PrimeFuel CY Online #0060;E-commerce;M
+LC000061;CarePharm CY #0061;Pharmacy;M
+LC000062;EuroPharmx CY #0062;Pharmacy;M
+LC000063;Aldii CY #0063;Retail;M
+LC000064;Tesko CY #0064;Retail;L
+LC000065;FitZone CY #0065;Retail Sport;L
+LC000066;Intersportt CY #0066;Retail Sport;M
+LC000067;SportDirekt CY #0067;Retail Sport;L
+LC000068;SportDirekt CY #0068;Retail Sport;M
+LC000069;Intersportt CY #0069;Retail Sport;S
+LC000070;FitZone CY #0070;Retail Sport;S
+LC000071;VitaBox CZ Online #0071;E-commerce;S
+LC000072;PulseMarket CZ Online #0072;E-commerce;S
+LC000073;VitaBox CZ Online #0073;E-commerce;M
+LC000074;VitaBox CZ Online #0074;E-commerce;S
+LC000075;VitaCare CZ #0075;Pharmacy;S
+LC000076;NutriPharm CZ #0076;Pharmacy;M
+LC000077;Carrefouk CZ #0077;Retail;S
+LC000078;Tesko CZ #0078;Retail;M
+LC000079;ProSport CZ #0079;Retail Sport;L
+LC000080;ProSport CZ #0080;Retail Sport;S
+LC000081;Intersportt CZ #0081;Retail Sport;L
+LC000082;Decatlon CZ #0082;Retail Sport;M
+LC000083;Intersportt CZ #0083;Retail Sport;M
+LC000084;Decatlon CZ #0084;Retail Sport;L
+LC000085;PrimeFuel DE Online #0085;E-commerce;S
+LC000086;PrimeFuel DE Online #0086;E-commerce;L
+LC000087;PrimeFuel DE Online #0087;E-commerce;M
+LC000088;FitNest DE Online #0088;E-commerce;L
+LC000089;PrimeFuel DE Online #0089;E-commerce;S
+LC000090;PrimeFuel DE Online #0090;E-commerce;S
+LC000091;PulseMarket DE Online #0091;E-commerce;L
+LC000092;PrimeFuel DE Online #0092;E-commerce;S
+LC000093;PrimeFuel DE Online #0093;E-commerce;S
+LC000094;GymMart DE Online #0094;E-commerce;S
+LC000095;EuroPharmx DE #0095;Pharmacy;L
+LC000096;EuroPharmx DE #0096;Pharmacy;M
+LC000097;VitaCare DE #0097;Pharmacy;M
+LC000098;VitaCare DE #0098;Pharmacy;S
+LC000099;VitaCare DE #0099;Pharmacy;L
+LC000100;Auchon DE #0100;Retail;M
+LC000101;Aldii DE #0101;Retail;M
+LC000102;Tesko DE #0102;Retail;M
+LC000103;Carrefouk DE #0103;Retail;L
+LC000104;Tesko DE #0104;Retail;S
+LC000105;Decatlon DE #0105;Retail Sport;M
+LC000106;Decathlonn DE #0106;Retail Sport;L
+LC000107;Intersportt DE #0107;Retail Sport;S
+LC000108;SportDirekt DE #0108;Retail Sport;L
+LC000109;Decathlonn DE #0109;Retail Sport;L
+LC000110;ProSport DE #0110;Retail Sport;M
+LC000111;Decatlon DE #0111;Retail Sport;M
+LC000112;ProSport DE #0112;Retail Sport;M
+LC000113;FitZone DE #0113;Retail Sport;S
+LC000114;ProSport DE #0114;Retail Sport;L
+LC000115;Decathlonn DE #0115;Retail Sport;M
+LC000116;Intersportt DE #0116;Retail Sport;L
+LC000117;Decathlonn DE #0117;Retail Sport;M
+LC000118;ProSport DE #0118;Retail Sport;M
+LC000119;FitZone DE #0119;Retail Sport;L
+LC000120;GymMart DK Online #0120;E-commerce;S
+LC000121;PulseMarket DK Online #0121;E-commerce;M
+LC000122;VitaBox DK Online #0122;E-commerce;S
+LC000123;PrimeFuel DK Online #0123;E-commerce;S
+LC000124;CarePharm DK #0124;Pharmacy;L
+LC000125;EuroPharmx DK #0125;Pharmacy;L
+LC000126;Tesko DK #0126;Retail;L
+LC000127;Tesko DK #0127;Retail;L
+LC000128;FitZone DK #0128;Retail Sport;L
+LC000129;Decatlon DK #0129;Retail Sport;L
+LC000130;Intersportt DK #0130;Retail Sport;L
+LC000131;Intersportt DK #0131;Retail Sport;L
+LC000132;ProSport DK #0132;Retail Sport;L
+LC000133;Intersportt DK #0133;Retail Sport;M
+LC000134;GymMart EE Online #0134;E-commerce;S
+LC000135;PulseMarket EE Online #0135;E-commerce;M
+LC000136;GymMart EE Online #0136;E-commerce;M
+LC000137;PulseMarket EE Online #0137;E-commerce;S
+LC000138;VitaCare EE #0138;Pharmacy;S
+LC000139;NutriPharm EE #0139;Pharmacy;M
+LC000140;Lidll EE #0140;Retail;M
+LC000141;Tesko EE #0141;Retail;L
+LC000142;Decathlonn EE #0142;Retail Sport;M
+LC000143;Intersportt EE #0143;Retail Sport;M
+LC000144;Decatlon EE #0144;Retail Sport;L
+LC000145;SportDirekt EE #0145;Retail Sport;S
+LC000146;ProSport EE #0146;Retail Sport;L
+LC000147;Decathlonn EE #0147;Retail Sport;L
+LC000148;FitNest ES Online #0148;E-commerce;S
+LC000149;VitaBox ES Online #0149;E-commerce;S
+LC000150;GymMart ES Online #0150;E-commerce;M
+LC000151;PulseMarket ES Online #0151;E-commerce;S
+LC000152;FitNest ES Online #0152;E-commerce;S
+LC000153;PrimeFuel ES Online #0153;E-commerce;S
+LC000154;VitaBox ES Online #0154;E-commerce;S
+LC000155;GymMart ES Online #0155;E-commerce;S
+LC000156;FitNest ES Online #0156;E-commerce;S
+LC000157;PulseMarket ES Online #0157;E-commerce;L
+LC000158;EuroPharmx ES #0158;Pharmacy;S
+LC000159;VitaCare ES #0159;Pharmacy;M
+LC000160;CarePharm ES #0160;Pharmacy;L
+LC000161;CarePharm ES #0161;Pharmacy;M
+LC000162;CarePharm ES #0162;Pharmacy;L
+LC000163;Aldii ES #0163;Retail;S
+LC000164;Tesko ES #0164;Retail;M
+LC000165;Auchon ES #0165;Retail;S
+LC000166;Auchon ES #0166;Retail;S
+LC000167;Aldii ES #0167;Retail;S
+LC000168;Decathlonn ES #0168;Retail Sport;L
+LC000169;ProSport ES #0169;Retail Sport;M
+LC000170;Decatlon ES #0170;Retail Sport;L
+LC000171;Intersportt ES #0171;Retail Sport;M
+LC000172;ProSport ES #0172;Retail Sport;S
+LC000173;Decathlonn ES #0173;Retail Sport;S
+LC000174;ProSport ES #0174;Retail Sport;M
+LC000175;Decatlon ES #0175;Retail Sport;S
+LC000176;SportDirekt ES #0176;Retail Sport;S
+LC000177;FitZone ES #0177;Retail Sport;M
+LC000178;SportDirekt ES #0178;Retail Sport;M
+LC000179;ProSport ES #0179;Retail Sport;S
+LC000180;Decathlonn ES #0180;Retail Sport;L
+LC000181;FitZone ES #0181;Retail Sport;M
+LC000182;Intersportt ES #0182;Retail Sport;L
+LC000183;PulseMarket FI Online #0183;E-commerce;S
+LC000184;VitaBox FI Online #0184;E-commerce;M
+LC000185;FitNest FI Online #0185;E-commerce;S
+LC000186;FitNest FI Online #0186;E-commerce;S
+LC000187;EuroPharmx FI #0187;Pharmacy;S
+LC000188;NutriPharm FI #0188;Pharmacy;L
+LC000189;Lidll FI #0189;Retail;M
+LC000190;Carrefouk FI #0190;Retail;M
+LC000191;Decathlonn FI #0191;Retail Sport;L
+LC000192;Decatlon FI #0192;Retail Sport;L
+LC000193;ProSport FI #0193;Retail Sport;M
+LC000194;Intersportt FI #0194;Retail Sport;M
+LC000195;Decathlonn FI #0195;Retail Sport;M
+LC000196;Decatlon FI #0196;Retail Sport;M
+LC000197;GymMart FR Online #0197;E-commerce;S
+LC000198;PulseMarket FR Online #0198;E-commerce;L
+LC000199;FitNest FR Online #0199;E-commerce;S
+LC000200;PulseMarket FR Online #0200;E-commerce;S
+LC000201;PrimeFuel FR Online #0201;E-commerce;M
+LC000202;PulseMarket FR Online #0202;E-commerce;M
+LC000203;VitaBox FR Online #0203;E-commerce;S
+LC000204;VitaBox FR Online #0204;E-commerce;S
+LC000205;FitNest FR Online #0205;E-commerce;M
+LC000206;PrimeFuel FR Online #0206;E-commerce;L
+LC000207;EuroPharmx FR #0207;Pharmacy;M
+LC000208;EuroPharmx FR #0208;Pharmacy;L
+LC000209;EuroPharmx FR #0209;Pharmacy;L
+LC000210;CarePharm FR #0210;Pharmacy;M
+LC000211;EuroPharmx FR #0211;Pharmacy;M
+LC000212;Rewee FR #0212;Retail;L
+LC000213;Rewee FR #0213;Retail;M
+LC000214;Auchon FR #0214;Retail;M
+LC000215;Carrefouk FR #0215;Retail;S
+LC000216;Auchon FR #0216;Retail;M
+LC000217;ProSport FR #0217;Retail Sport;M
+LC000218;FitZone FR #0218;Retail Sport;L
+LC000219;ProSport FR #0219;Retail Sport;L
+LC000220;Decatlon FR #0220;Retail Sport;M
+LC000221;Decatlon FR #0221;Retail Sport;M
+LC000222;Intersportt FR #0222;Retail Sport;L
+LC000223;Intersportt FR #0223;Retail Sport;M
+LC000224;Decatlon FR #0224;Retail Sport;L
+LC000225;Intersportt FR #0225;Retail Sport;M
+LC000226;FitZone FR #0226;Retail Sport;L
+LC000227;Decathlonn FR #0227;Retail Sport;S
+LC000228;ProSport FR #0228;Retail Sport;L
+LC000229;Decathlonn FR #0229;Retail Sport;S
+LC000230;SportDirekt FR #0230;Retail Sport;L
+LC000231;ProSport FR #0231;Retail Sport;L
+LC000232;PrimeFuel GR Online #0232;E-commerce;M
+LC000233;PulseMarket GR Online #0233;E-commerce;S
+LC000234;GymMart GR Online #0234;E-commerce;S
+LC000235;FitNest GR Online #0235;E-commerce;M
+LC000236;CarePharm GR #0236;Pharmacy;M
+LC000237;EuroPharmx GR #0237;Pharmacy;L
+LC000238;Aldii GR #0238;Retail;M
+LC000239;Rewee GR #0239;Retail;M
+LC000240;SportDirekt GR #0240;Retail Sport;S
+LC000241;FitZone GR #0241;Retail Sport;L
+LC000242;FitZone GR #0242;Retail Sport;L
+LC000243;Intersportt GR #0243;Retail Sport;M
+LC000244;FitZone GR #0244;Retail Sport;L
+LC000245;Decatlon GR #0245;Retail Sport;M
+LC000246;PrimeFuel HR Online #0246;E-commerce;S
+LC000247;PrimeFuel HR Online #0247;E-commerce;S
+LC000248;GymMart HR Online #0248;E-commerce;M
+LC000249;PrimeFuel HR Online #0249;E-commerce;M
+LC000250;VitaCare HR #0250;Pharmacy;M
+LC000251;VitaCare HR #0251;Pharmacy;L
+LC000252;Aldii HR #0252;Retail;M
+LC000253;Rewee HR #0253;Retail;S
+LC000254;FitZone HR #0254;Retail Sport;M
+LC000255;FitZone HR #0255;Retail Sport;M
+LC000256;FitZone HR #0256;Retail Sport;L
+LC000257;Decathlonn HR #0257;Retail Sport;L
+LC000258;Decatlon HR #0258;Retail Sport;M
+LC000259;FitZone HR #0259;Retail Sport;M
+LC000260;PulseMarket HU Online #0260;E-commerce;S
+LC000261;FitNest HU Online #0261;E-commerce;S
+LC000262;PulseMarket HU Online #0262;E-commerce;M
+LC000263;GymMart HU Online #0263;E-commerce;S
+LC000264;VitaCare HU #0264;Pharmacy;M
+LC000265;CarePharm HU #0265;Pharmacy;M
+LC000266;Carrefouk HU #0266;Retail;M
+LC000267;Carrefouk HU #0267;Retail;S
+LC000268;ProSport HU #0268;Retail Sport;M
+LC000269;Decatlon HU #0269;Retail Sport;M
+LC000270;ProSport HU #0270;Retail Sport;M
+LC000271;Intersportt HU #0271;Retail Sport;S
+LC000272;FitZone HU #0272;Retail Sport;L
+LC000273;FitZone HU #0273;Retail Sport;S
+LC000274;GymMart IE Online #0274;E-commerce;L
+LC000275;VitaBox IE Online #0275;E-commerce;S
+LC000276;VitaBox IE Online #0276;E-commerce;S
+LC000277;PrimeFuel IE Online #0277;E-commerce;M
+LC000278;CarePharm IE #0278;Pharmacy;S
+LC000279;CarePharm IE #0279;Pharmacy;M
+LC000280;Carrefouk IE #0280;Retail;L
+LC000281;Tesko IE #0281;Retail;S
+LC000282;Decatlon IE #0282;Retail Sport;L
+LC000283;Decatlon IE #0283;Retail Sport;L
+LC000284;ProSport IE #0284;Retail Sport;M
+LC000285;Intersportt IE #0285;Retail Sport;L
+LC000286;Decatlon IE #0286;Retail Sport;S
+LC000287;Decathlonn IE #0287;Retail Sport;L
+LC000288;PulseMarket IT Online #0288;E-commerce;S
+LC000289;PrimeFuel IT Online #0289;E-commerce;M
+LC000290;VitaBox IT Online #0290;E-commerce;S
+LC000291;VitaBox IT Online #0291;E-commerce;L
+LC000292;VitaBox IT Online #0292;E-commerce;M
+LC000293;FitNest IT Online #0293;E-commerce;S
+LC000294;VitaBox IT Online #0294;E-commerce;S
+LC000295;VitaBox IT Online #0295;E-commerce;S
+LC000296;PulseMarket IT Online #0296;E-commerce;S
+LC000297;VitaBox IT Online #0297;E-commerce;L
+LC000298;EuroPharmx IT #0298;Pharmacy;L
+LC000299;NutriPharm IT #0299;Pharmacy;L
+LC000300;NutriPharm IT #0300;Pharmacy;S
+LC000301;CarePharm IT #0301;Pharmacy;M
+LC000302;EuroPharmx IT #0302;Pharmacy;S
+LC000303;Lidll IT #0303;Retail;M
+LC000304;Aldii IT #0304;Retail;M
+LC000305;Rewee IT #0305;Retail;L
+LC000306;Auchon IT #0306;Retail;M
+LC000307;Tesko IT #0307;Retail;M
+LC000308;Intersportt IT #0308;Retail Sport;M
+LC000309;ProSport IT #0309;Retail Sport;M
+LC000310;ProSport IT #0310;Retail Sport;L
+LC000311;FitZone IT #0311;Retail Sport;M
+LC000312;ProSport IT #0312;Retail Sport;S
+LC000313;ProSport IT #0313;Retail Sport;M
+LC000314;FitZone IT #0314;Retail Sport;M
+LC000315;ProSport IT #0315;Retail Sport;M
+LC000316;ProSport IT #0316;Retail Sport;S
+LC000317;SportDirekt IT #0317;Retail Sport;L
+LC000318;Decathlonn IT #0318;Retail Sport;S
+LC000319;Intersportt IT #0319;Retail Sport;S
+LC000320;Intersportt IT #0320;Retail Sport;L
+LC000321;Intersportt IT #0321;Retail Sport;L
+LC000322;SportDirekt IT #0322;Retail Sport;L
+LC000323;PrimeFuel LT Online #0323;E-commerce;S
+LC000324;VitaBox LT Online #0324;E-commerce;S
+LC000325;PrimeFuel LT Online #0325;E-commerce;M
+LC000326;GymMart LT Online #0326;E-commerce;S
+LC000327;EuroPharmx LT #0327;Pharmacy;M
+LC000328;VitaCare LT #0328;Pharmacy;S
+LC000329;Tesko LT #0329;Retail;S
+LC000330;Aldii LT #0330;Retail;L
+LC000331;Intersportt LT #0331;Retail Sport;S
+LC000332;ProSport LT #0332;Retail Sport;M
+LC000333;Decathlonn LT #0333;Retail Sport;S
+LC000334;Decatlon LT #0334;Retail Sport;M
+LC000335;FitZone LT #0335;Retail Sport;M
+LC000336;Decathlonn LT #0336;Retail Sport;L
+LC000337;GymMart LU Online #0337;E-commerce;L
+LC000338;PrimeFuel LU Online #0338;E-commerce;S
+LC000339;PulseMarket LU Online #0339;E-commerce;S
+LC000340;PrimeFuel LU Online #0340;E-commerce;S
+LC000341;CarePharm LU #0341;Pharmacy;M
+LC000342;CarePharm LU #0342;Pharmacy;M
+LC000343;Carrefouk LU #0343;Retail;S
+LC000344;Tesko LU #0344;Retail;M
+LC000345;ProSport LU #0345;Retail Sport;L
+LC000346;Intersportt LU #0346;Retail Sport;M
+LC000347;Decathlonn LU #0347;Retail Sport;M
+LC000348;ProSport LU #0348;Retail Sport;M
+LC000349;SportDirekt LU #0349;Retail Sport;L
+LC000350;SportDirekt LU #0350;Retail Sport;S
+LC000351;PrimeFuel LV Online #0351;E-commerce;S
+LC000352;FitNest LV Online #0352;E-commerce;S
+LC000353;PulseMarket LV Online #0353;E-commerce;M
+LC000354;GymMart LV Online #0354;E-commerce;L
+LC000355;NutriPharm LV #0355;Pharmacy;S
+LC000356;VitaCare LV #0356;Pharmacy;L
+LC000357;Auchon LV #0357;Retail;S
+LC000358;Aldii LV #0358;Retail;M
+LC000359;Decathlonn LV #0359;Retail Sport;S
+LC000360;ProSport LV #0360;Retail Sport;M
+LC000361;FitZone LV #0361;Retail Sport;L
+LC000362;Decathlonn LV #0362;Retail Sport;M
+LC000363;Decathlonn LV #0363;Retail Sport;S
+LC000364;FitZone LV #0364;Retail Sport;M
+LC000365;PulseMarket MT Online #0365;E-commerce;S
+LC000366;VitaBox MT Online #0366;E-commerce;S
+LC000367;FitNest MT Online #0367;E-commerce;M
+LC000368;VitaBox MT Online #0368;E-commerce;L
+LC000369;CarePharm MT #0369;Pharmacy;M
+LC000370;CarePharm MT #0370;Pharmacy;M
+LC000371;Lidll MT #0371;Retail;M
+LC000372;Lidll MT #0372;Retail;M
+LC000373;FitZone MT #0373;Retail Sport;S
+LC000374;ProSport MT #0374;Retail Sport;M
+LC000375;SportDirekt MT #0375;Retail Sport;M
+LC000376;ProSport MT #0376;Retail Sport;L
+LC000377;Decathlonn MT #0377;Retail Sport;S
+LC000378;ProSport MT #0378;Retail Sport;S
+LC000379;VitaBox NL Online #0379;E-commerce;S
+LC000380;PrimeFuel NL Online #0380;E-commerce;L
+LC000381;PulseMarket NL Online #0381;E-commerce;S
+LC000382;GymMart NL Online #0382;E-commerce;M
+LC000383;FitNest NL Online #0383;E-commerce;S
+LC000384;FitNest NL Online #0384;E-commerce;S
+LC000385;NutriPharm NL #0385;Pharmacy;M
+LC000386;VitaCare NL #0386;Pharmacy;S
+LC000387;VitaCare NL #0387;Pharmacy;L
+LC000388;Carrefouk NL #0388;Retail;M
+LC000389;Carrefouk NL #0389;Retail;L
+LC000390;Auchon NL #0390;Retail;M
+LC000391;FitZone NL #0391;Retail Sport;M
+LC000392;Decatlon NL #0392;Retail Sport;M
+LC000393;Intersportt NL #0393;Retail Sport;M
+LC000394;FitZone NL #0394;Retail Sport;L
+LC000395;Intersportt NL #0395;Retail Sport;M
+LC000396;ProSport NL #0396;Retail Sport;S
+LC000397;Intersportt NL #0397;Retail Sport;M
+LC000398;Decathlonn NL #0398;Retail Sport;M
+LC000399;Decatlon NL #0399;Retail Sport;L
+LC000400;PrimeFuel PL Online #0400;E-commerce;L
+LC000401;FitNest PL Online #0401;E-commerce;S
+LC000402;GymMart PL Online #0402;E-commerce;M
+LC000403;PulseMarket PL Online #0403;E-commerce;S
+LC000404;FitNest PL Online #0404;E-commerce;S
+LC000405;VitaBox PL Online #0405;E-commerce;S
+LC000406;VitaCare PL #0406;Pharmacy;L
+LC000407;NutriPharm PL #0407;Pharmacy;L
+LC000408;VitaCare PL #0408;Pharmacy;M
+LC000409;Tesko PL #0409;Retail;M
+LC000410;Tesko PL #0410;Retail;S
+LC000411;Auchon PL #0411;Retail;M
+LC000412;Intersportt PL #0412;Retail Sport;S
+LC000413;FitZone PL #0413;Retail Sport;M
+LC000414;Decatlon PL #0414;Retail Sport;M
+LC000415;SportDirekt PL #0415;Retail Sport;S
+LC000416;Decathlonn PL #0416;Retail Sport;L
+LC000417;Intersportt PL #0417;Retail Sport;S
+LC000418;Intersportt PL #0418;Retail Sport;M
+LC000419;FitZone PL #0419;Retail Sport;L
+LC000420;Decathlonn PL #0420;Retail Sport;M
+LC000421;FitNest PT Online #0421;E-commerce;M
+LC000422;PrimeFuel PT Online #0422;E-commerce;M
+LC000423;PrimeFuel PT Online #0423;E-commerce;S
+LC000424;VitaBox PT Online #0424;E-commerce;M
+LC000425;GymMart PT Online #0425;E-commerce;S
+LC000426;PrimeFuel PT Online #0426;E-commerce;L
+LC000427;NutriPharm PT #0427;Pharmacy;S
+LC000428;NutriPharm PT #0428;Pharmacy;S
+LC000429;CarePharm PT #0429;Pharmacy;L
+LC000430;Rewee PT #0430;Retail;M
+LC000431;Rewee PT #0431;Retail;M
+LC000432;Tesko PT #0432;Retail;S
+LC000433;Decathlonn PT #0433;Retail Sport;M
+LC000434;Decatlon PT #0434;Retail Sport;L
+LC000435;Intersportt PT #0435;Retail Sport;L
+LC000436;FitZone PT #0436;Retail Sport;S
+LC000437;FitZone PT #0437;Retail Sport;M
+LC000438;FitZone PT #0438;Retail Sport;S
+LC000439;FitZone PT #0439;Retail Sport;L
+LC000440;Intersportt PT #0440;Retail Sport;L
+LC000441;Intersportt PT #0441;Retail Sport;M
+LC000442;PulseMarket RO Online #0442;E-commerce;M
+LC000443;FitNest RO Online #0443;E-commerce;S
+LC000444;PulseMarket RO Online #0444;E-commerce;S
+LC000445;FitNest RO Online #0445;E-commerce;S
+LC000446;VitaCare RO #0446;Pharmacy;S
+LC000447;VitaCare RO #0447;Pharmacy;M
+LC000448;Aldii RO #0448;Retail;M
+LC000449;Rewee RO #0449;Retail;S
+LC000450;ProSport RO #0450;Retail Sport;L
+LC000451;Decatlon RO #0451;Retail Sport;M
+LC000452;Decatlon RO #0452;Retail Sport;L
+LC000453;ProSport RO #0453;Retail Sport;S
+LC000454;Decatlon RO #0454;Retail Sport;L
+LC000455;Decathlonn RO #0455;Retail Sport;S
+LC000456;PrimeFuel SE Online #0456;E-commerce;S
+LC000457;GymMart SE Online #0457;E-commerce;S
+LC000458;FitNest SE Online #0458;E-commerce;M
+LC000459;PulseMarket SE Online #0459;E-commerce;L
+LC000460;PulseMarket SE Online #0460;E-commerce;M
+LC000461;PulseMarket SE Online #0461;E-commerce;M
+LC000462;NutriPharm SE #0462;Pharmacy;S
+LC000463;EuroPharmx SE #0463;Pharmacy;M
+LC000464;NutriPharm SE #0464;Pharmacy;M
+LC000465;Auchon SE #0465;Retail;S
+LC000466;Lidll SE #0466;Retail;M
+LC000467;Aldii SE #0467;Retail;M
+LC000468;ProSport SE #0468;Retail Sport;M
+LC000469;ProSport SE #0469;Retail Sport;M
+LC000470;Intersportt SE #0470;Retail Sport;M
+LC000471;Decathlonn SE #0471;Retail Sport;L
+LC000472;Decatlon SE #0472;Retail Sport;M
+LC000473;Decatlon SE #0473;Retail Sport;S
+LC000474;Decathlonn SE #0474;Retail Sport;L
+LC000475;SportDirekt SE #0475;Retail Sport;M
+LC000476;FitZone SE #0476;Retail Sport;L
+LC000477;PulseMarket SI Online #0477;E-commerce;S
+LC000478;VitaBox SI Online #0478;E-commerce;M
+LC000479;FitNest SI Online #0479;E-commerce;M
+LC000480;FitNest SI Online #0480;E-commerce;S
+LC000481;CarePharm SI #0481;Pharmacy;L
+LC000482;NutriPharm SI #0482;Pharmacy;M
+LC000483;Aldii SI #0483;Retail;L
+LC000484;Tesko SI #0484;Retail;S
+LC000485;Decathlonn SI #0485;Retail Sport;L
+LC000486;FitZone SI #0486;Retail Sport;M
+LC000487;Decatlon SI #0487;Retail Sport;L
+LC000488;ProSport SI #0488;Retail Sport;M
+LC000489;SportDirekt SI #0489;Retail Sport;S
+LC000490;FitZone SI #0490;Retail Sport;L
+LC000491;PrimeFuel SK Online #0491;E-commerce;S
+LC000492;FitNest SK Online #0492;E-commerce;M
+LC000493;GymMart SK Online #0493;E-commerce;S
+LC000494;PulseMarket SK Online #0494;E-commerce;M
+LC000495;CarePharm SK #0495;Pharmacy;M
+LC000496;CarePharm SK #0496;Pharmacy;S
+LC000497;Tesko SK #0497;Retail;S
+LC000498;Lidll SK #0498;Retail;S
+LC000499;Decatlon SK #0499;Retail Sport;M
+LC000500;SportDirekt SK #0500;Retail Sport;L
+LC000501;ProSport SK #0501;Retail Sport;S
+LC000502;Decatlon SK #0502;Retail Sport;L
+LC000503;Decathlonn SK #0503;Retail Sport;M
+LC000504;ProSport SK #0504;Retail Sport;L

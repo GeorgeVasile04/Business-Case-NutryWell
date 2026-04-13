@@ -1,0 +1,9 @@
+﻿SKU;Product Name;Range;Sub-Category;Format;Net Weight kg;Shelf Life (months);Selling Price EUR;Gross Margin %;Launch Date;Standard Cost EUR;Primary Plant;Primary DC;Commercial Start Date;Forecast Monthly Demand (units);Forecast Year 1 Demand (units)
+SP-BAR;Protein Bar Box (12);Sport;Snack;12 units;0,6;12;9;0,44;2024-03-01 00:00:00;5,04;CZ-09;BE-DC3;2026-01-01 00:00:00;1900;22800
+SP-BCAA;BCAA Recovery 300g;Sport;Recovery;Powder;0,3;24;22;0,66;2024-03-01 00:00:00;7,48;BE-07;BE-DC3;2026-01-01 00:00:00;1300;15600
+SP-CREA;Creatine Monohydrate 300g;Sport;Performance;Powder;0,5;24;19;0,63;2024-07-01 00:00:00;7,03;BE-07;BE-DC3;2026-01-01 00:00:00;1300;15600
+SP-GAIN;Mass Gainer 2kg;Sport;Mass;Powder;2;24;30;0,6;2024-04-01 00:00:00;12;BE-07;BE-DC3;2026-01-01 00:00:00;1100;13200
+SP-ISO;Isotonic Drink Mix 600g;Sport;Hydration;Powder;0,6;18;17;0,62;2024-09-01 00:00:00;6,46;ES-05;BE-DC3;2026-01-01 00:00:00;1150;13800
+SP-PREW;Pre-Workout Booster 400g;Sport;Performance;Powder;0,4;18;28;0,68;2024-03-01 00:00:00;8,96;BE-07;BE-DC3;2026-01-01 00:00:00;1100;13200
+SP-WHEY;Whey Protein Premium 1kg;Sport;Protein;Powder;1;24;20;0,6;2024-03-01 00:00:00;8;BE-07;BE-DC3;2026-01-01 00:00:00;1200;14400
+SP-WHEY2;Whey Protein Premium 2kg;Sport;Protein;Powder;2;24;36;0,58;2024-05-01 00:00:00;15,12;BE-07;BE-DC3;2026-01-01 00:00:00;1300;15600

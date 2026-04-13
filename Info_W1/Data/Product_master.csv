@@ -1,0 +1,18 @@
+SKU;Product Name;Range;Sub-Category;Format;Net Weight kg;Shelf Life (months);Selling Price EUR;Gross Margin %;Launch Date;Standard Cost EUR;Primary Plant;Primary DC
+NW-COLL;Collagen Powder 300g;Lifestyle;Beauty;Powder;0,3;24;24;0,71;01/07/2023 00:00;6,96;IT-04;BE-DC2
+NW-DETOX;Detox Program 7 Days;Lifestyle;Detox;Kit;0,4;12;35;0,71;01/08/2023 00:00;10,15;IT-04;BE-DC2
+NW-ENERGY;Energy Boost Liquid (10);Lifestyle;Energy;Liquid;0,2;12;15;0,7;01/05/2024 00:00;4,5;ES-05;BE-DC2
+NW-HYDR;Hydration Electrolytes;Lifestyle;Hydration;Powder;0,25;18;16;0,68;01/04/2024 00:00;5,12;IT-04;BE-DC2
+NW-IMMUNO;Immunity Booster;Core;Immunity;Capsules;0,08;24;11;0,64;01/09/2023 00:00;3,96;PL-01;BE-DC1
+NW-MAG;Magnesium Calm;Core;Minerals;Capsules;0,07;36;10;0,65;01/11/2023 00:00;3,5;PL-01;BE-DC1
+NW-MULTI;Multivitamin Daily;Core;Multivitamin;Tablets;0,1;36;8;0,63;01/07/2023 00:00;2,96;PL-01;BE-DC1
+NW-OMEGA;Omega 3 Triple Action;Core;Omega;Capsules;0,09;24;12;0,6;01/10/2023 00:00;4,8;DE-02;BE-DC1
+NW-SLEEP;Sleep Support Gummies;Lifestyle;Sleep;Gummies;0,15;18;18;0,67;01/07/2023 00:00;5,94;FR-03;BE-DC2
+NW-VITC;Vitamin C 1000mg;Core;Vitamins;Tablets;0,12;36;6,5;0,62;01/07/2023 00:00;2,47;PL-01;BE-DC1
+NW-VITD;Vitamin D3 2000IU;Core;Vitamins;Capsules;0,06;36;5;0,64;01/07/2023 00:00;1,8;PL-01;BE-DC1
+NW-ZINC;Zinc Immunity;Core;Minerals;Tablets;0,08;36;7,5;0,62;01/01/2024 00:00;2,85;PL-01;BE-DC1
+NW-9010;Protein Blend 1kg;Lifestyle;Protein & Recovery;Powder;1;24;32;0,66;01/10/2023 00:00;10,88;IT-04;BE-DC2
+NW-9011;Ashwagandha Balance (60 caps);Core;Stress & Sleep;Capsules;0,06;36;14;0,64;01/07/2023 00:00;5,04;DE-02;BE-DC1
+NW-9012;Vitamin B12 Energy (90 tabs);Core;Energy & Focus;Tablets;0,08;36;6,5;0,62;01/07/2023 00:00;2,47;PL-01;BE-DC1
+NW-9013;Iron + Vitamin C (60 tabs);Core;Minerals;Tablets;0,1;36;9,5;0,63;01/09/2023 00:00;3,52;PL-01;BE-DC1
+NW-9014;Prebiotic Fiber Sachets (30x10g);Lifestyle;Digestion;Powder;0,3;24;22;0,68;01/03/2024 00:00;7,04;FR-03;BE-DC2
