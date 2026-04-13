@@ -6,7 +6,7 @@ import math
 # =============================================================================
 # DATA LOADING
 # =============================================================================
-base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 data_dir = os.path.join(base_dir, "Data")
 if not os.path.exists(data_dir):
     data_dir = "."
