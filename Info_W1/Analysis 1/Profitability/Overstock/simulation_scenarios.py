@@ -26,6 +26,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 from statsmodels.tsa.holtwinters import SimpleExpSmoothing, Holt, ExponentialSmoothing
+from openpyxl.chart import LineChart, Reference
 
 warnings.filterwarnings("ignore")
 
@@ -218,21 +219,17 @@ def main():
     # Scenario B — MovingAvg3
     po_scenB = build_forecast_matrix(demand, skus, sim_months, "MovingAvg3")
 
-    # Scenario C — SES
-    po_scenC = build_forecast_matrix(demand, skus, sim_months, "SES")
+    # Scenario C — HoltWinters
+    po_scenC = build_forecast_matrix(demand, skus, sim_months, "HoltWinters")
 
-    # Scenario D — Champion per SKU (picked on earlier hold-out)
-    champions = compute_champions(demand, skus, test_months=6)
-    print("Champion method per SKU:")
-    for k, v in champions.items():
-        print(f"  {k:<10}  {v}")
-    po_scenD = build_forecast_matrix(demand, skus, sim_months, champions)
+    # Scenario D — LinearSeasonal
+    po_scenD = build_forecast_matrix(demand, skus, sim_months, "LinearSeasonal")
 
     scenarios = {
         "A_Current_FlatPO":   po_scenA,
         "B_MovingAvg3":       po_scenB,
-        "C_SES":              po_scenC,
-        "D_Champion_per_SKU": po_scenD,
+        "C_HoltWinters":      po_scenC,
+        "D_LinearSeasonal":   po_scenD,
     }
 
     all_rows = pd.concat([simulate(n, demand_sim, p, prices)
@@ -271,6 +268,14 @@ def main():
 
     # ---- export ----------------------------------------------------
     out_file = OUT_DIR / "simulation_results.xlsx"
+    
+    chart_df = pd.DataFrame({
+        "Month": demand_sim.index.astype(str),
+        "Actual Demand": demand_sim.sum(axis=1).values,
+        "MovingAvg3": po_scenB.sum(axis=1).values,
+        "HoltWinters": po_scenC.sum(axis=1).values
+    })
+
     with pd.ExcelWriter(out_file, engine="openpyxl") as w:
         totals.round(2).to_excel(w, sheet_name="Scenario_Totals", index=False)
         yearly.round(2).to_excel(w, sheet_name="By_SKU_Year", index=False)
@@ -278,8 +283,40 @@ def main():
         for name, po in scenarios.items():
             po.to_excel(w, sheet_name=f"PO_{name[:25]}")
         demand_sim.to_excel(w, sheet_name="Actual_Demand")
-        pd.Series(champions, name="Champion").rename_axis("SKU").reset_index()\
-            .to_excel(w, sheet_name="Champions", index=False)
+        
+        chart_sheet = "Global_Charts"
+        chart_df.to_excel(w, sheet_name=chart_sheet, index=False)
+        
+        ws = w.sheets[chart_sheet]
+        
+        # Chart 1: MovingAvg3
+        c1 = LineChart()
+        c1.title = "Global Demand vs MovingAvg3 Forecast"
+        c1.y_axis.title = "Total Units"
+        c1.x_axis.title = "Month"
+        c1.width = 15
+        c1.height = 7.5
+        
+        data1 = Reference(ws, min_col=2, min_row=1, max_col=3, max_row=len(chart_df)+1)
+        cats1 = Reference(ws, min_col=1, min_row=2, max_row=len(chart_df)+1)
+        c1.add_data(data1, titles_from_data=True)
+        c1.set_categories(cats1)
+        ws.add_chart(c1, "F2")
+        
+        # Chart 2: HoltWinters
+        c2 = LineChart()
+        c2.title = "Global Demand vs HoltWinters Forecast"
+        c2.y_axis.title = "Total Units"
+        c2.x_axis.title = "Month"
+        c2.width = 15
+        c2.height = 7.5
+        
+        data2_demand = Reference(ws, min_col=2, min_row=1, max_col=2, max_row=len(chart_df)+1)
+        data2_hw = Reference(ws, min_col=4, min_row=1, max_col=4, max_row=len(chart_df)+1)
+        c2.add_data(data2_demand, titles_from_data=True)
+        c2.add_data(data2_hw, titles_from_data=True)
+        c2.set_categories(cats1)
+        ws.add_chart(c2, "F18")
 
     print(f"\nSaved: {out_file}")
 

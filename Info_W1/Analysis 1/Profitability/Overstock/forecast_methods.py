@@ -33,6 +33,7 @@ OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 ERP_FILE     = PROJECT_DIR / "Info_W1" / "Data" / "Order_ERP.csv"
 PM_FILE      = PROJECT_DIR / "Info_W1" / "Data" / "Product_master.csv"
+PO_FILE      = PROJECT_DIR / "Info_W3" / "NutrYWell_PO.csv"
 TEST_MONTHS  = 6   # hold-out window for accuracy evaluation
 SEASON_PER   = 12  # monthly seasonality
 
@@ -210,6 +211,89 @@ def main():
                      .rename_axis("SKU").reset_index())
     print("\n=== Champion method per SKU ===")
     print(champion_df.to_string(index=False))
+
+    # -------- Full-history summary for Current, MovingAvg3, HoltWinters --------
+    sim_months = demand.index
+    
+    def get_global_forecast(method_name):
+        f_matrix = pd.DataFrame(index=sim_months, columns=skus, dtype=float)
+        for sku in skus:
+            y = demand[sku].values.astype(float)
+            first_nz = np.argmax(y > 0) if y.sum() > 0 else 0
+            # We want to create a simulation array for the entire period.
+            # Due to the simple methods we have, let's just generate the forecast trained on the first part,
+            # or simply generate the forecast for the whole horizon if it's Naive/Moving Avg.
+            # For simplicity let's use the fitted values for past + forecast for future.
+            
+            # Since the tools don't return fitted values by default, we will do a rolling in-sample forecast 
+            # for MovingAvg3 and use the model's fitted values + forecast for HoltWinters.
+            
+            yh = np.full(len(y), np.nan)
+            if method_name == "MovingAvg3":
+                for i in range(len(y)):
+                    if i >= first_nz + 3:
+                        yh[i] = np.mean(y[i-3:i])
+            elif method_name == "HoltWinters":
+                if len(y[first_nz:]) > 2 * 12:
+                    try:
+                        # optimized=True ensures statsmodels tests permutations to find the optimal alpha, beta, and gamma
+                        model = ExponentialSmoothing(y[first_nz:], trend="add", seasonal="add", seasonal_periods=12, initialization_method="estimated").fit(optimized=True)
+                        yh[first_nz:] = model.fittedvalues
+                        yh[first_nz] = np.nan
+                    except:
+                        pass
+                else:
+                    try:
+                        model = Holt(y[first_nz:], initialization_method="estimated").fit(optimized=True)
+                        yh[first_nz:] = model.fittedvalues
+                        yh[first_nz] = np.nan
+                    except:
+                        pass
+            elif method_name == "Holt":
+                try:
+                    # optimized=True finds optimal alpha and beta
+                    model = Holt(y[first_nz:], initialization_method="estimated").fit(optimized=True)
+                    yh[first_nz:] = model.fittedvalues
+                    yh[first_nz] = np.nan
+                except:
+                    pass
+            elif method_name == "LinearSeasonal":
+                try:
+                    y_act = y[first_nz:]
+                    n_act = len(y_act)
+                    t = np.arange(n_act)
+                    months = (t % 12)
+                    X = np.ones((n_act, 1 + 1 + 11))
+                    X[:, 1] = t
+                    for m in range(1, 12):
+                        X[:, 1 + m] = (months == m).astype(float)
+                    beta, *_ = np.linalg.lstsq(X, y_act, rcond=None)
+                    yh[first_nz:] = X @ beta
+                except:
+                    pass
+            
+            f_matrix[sku] = np.clip(yh, 0, None)
+        return f_matrix.sum(axis=1)
+
+    po = pd.read_csv(PO_FILE, sep=";", decimal=",")
+    po = po[po["SKU"].isin(skus)].copy()
+    po["Month"] = pd.to_datetime(po["PO Date"], dayfirst=True, format="mixed").dt.to_period("M")
+    po_matrix = po.groupby(["Month", "SKU"])["Quantity Purchased (units)"].sum().unstack(fill_value=0)
+    current_sit = po_matrix.reindex(sim_months, fill_value=0).sum(axis=1)
+
+    summary_df = pd.DataFrame({
+        "Month": sim_months.astype(str),
+        "Actual Demand": demand.sum(axis=1).values,
+        "Current situation": current_sit.values,
+        "MovingAvg3": np.round(get_global_forecast("MovingAvg3").values),
+        "Holt": np.round(get_global_forecast("Holt").values),
+        "HoltWinters": np.round(get_global_forecast("HoltWinters").values),
+        "LinearSeasonal": np.round(get_global_forecast("LinearSeasonal").values)
+    })
+
+    summary_out_file = OUT_DIR / "full_history_forecast_summary.xlsx"
+    summary_df.to_excel(summary_out_file, index=False)
+    print(f"\nSaved Full-history summary: {summary_out_file}")
 
     # -------- export ------------------------------------------------
     out_file = OUT_DIR / "forecasts.xlsx"
