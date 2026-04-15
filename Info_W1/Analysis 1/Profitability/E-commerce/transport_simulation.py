@@ -136,11 +136,11 @@ def build_B():
     return s
 
 def build_C():
-    """C: Consolidation + all DCs for e-commerce (cheapest DC per country)."""
+    """C: Only all DCs for e-commerce. No consolidation."""
     df_e = df[df['Channel']=='E-commerce']
     df_o = df[df['Channel']!='E-commerce']
 
-    # E-commerce: consolidate ignoring DC, use cheapest
+    # E-commerce baskets mathematically split in ERP get reconstructed matching Customer+Day
     e = df_e.groupby(['Customer ID','Ship To ID','ERP_Day','Country','Channel','Year'],
                      as_index=False).agg(
         Weight=('Line_Weight','sum'), Revenue=('Line_Revenue','sum'),
@@ -151,8 +151,8 @@ def build_C():
     e['Pallets']   = np.ceil(e['Weight']/200).clip(lower=1)
     e['Transport']  = e['Pallets']*e['Fixed Cost per Pallet EUR'] + e['Weight']*e['Variable Cost EUR per kg']
 
-    # Others: consolidate within same DC (same as B)
-    o = df_o.groupby(['Customer ID','Ship To ID','ERP_Day','Country','Branch/DC','Channel','Year'],
+    # Others: exactly as Scenario A (no consolidation)
+    o = df_o.groupby(['Order ID','Branch/DC','Country','Channel','Year'],
                      as_index=False).agg(
         Weight=('Line_Weight','sum'), Revenue=('Line_Revenue','sum'),
         GP=('Line_GP','sum'), SKU_Qty=('Quantity','sum'))
@@ -168,16 +168,33 @@ def build_C():
     return s
 
 def build_D():
-    """D: C + surcharge on e-commerce orders below threshold."""
-    s = build_C()
+    """D: Only surcharge on e-commerce. No consolidation."""
+    s = build_A()
     s['Surcharge'] = np.where(
         (s['Channel']=='E-commerce') & (s['Revenue'] < SURCHARGE_THRESHOLD),
         SURCHARGE_AMOUNT, 0.0)
     return s
 
 def build_E():
-    """E: D + parcel carrier for e-commerce (replace pallets with parcels)."""
-    s = build_D()
+    """E: Only parcel carrier for e-commerce. No consolidation."""
+    s = build_A()
+    mask = s['Channel'] == 'E-commerce'
+    s.loc[mask, 'Transport'] = s.loc[mask].apply(
+        lambda r: get_parcel_cost(r['Country'], r['Weight']), axis=1)
+    s.loc[mask, 'Parcels'] = s.loc[mask, 'Weight'].apply(
+        lambda w: max(1, math.ceil(w / 31.5)))
+    s.loc[mask, 'Pallets'] = 0
+    return s
+
+def build_F():
+    """F: C + D + E combined (All DCs, Surcharge, Parcel). No consolidation."""
+    # Base on C (All DCs)
+    s = build_C()
+    # Add surcharge
+    s['Surcharge'] = np.where(
+        (s['Channel']=='E-commerce') & (s['Revenue'] < SURCHARGE_THRESHOLD),
+        SURCHARGE_AMOUNT, 0.0)
+    # Add parcel
     mask = s['Channel'] == 'E-commerce'
     s.loc[mask, 'Transport'] = s.loc[mask].apply(
         lambda r: get_parcel_cost(r['Country'], r['Weight']), axis=1)
@@ -196,6 +213,7 @@ scenarios = {
     'C': build_C(),
     'D': build_D(),
     'E': build_E(),
+    'F': build_F(),
 }
 
 # Add contribution columns to each
@@ -236,9 +254,10 @@ summaries = {name: summarize(s, name) for name, s in scenarios.items()}
 SCENARIO_LABELS = {
     'A': 'SCENARIO A — CURRENT STATE\n  1 order = 1 shipment = 1 pallet. No consolidation.',
     'B': 'SCENARIO B — CONSOLIDATION ONLY (same DC)\n  Consolidate by Customer + Ship-To + ERP Entry Day + DC. Original DC kept for all channels.',
-    'C': 'SCENARIO C — CONSOLIDATION + ALL DCs FOR E-COMMERCE\n  B + E-commerce: all products in all DCs, ship from cheapest DC per country.',
-    'D': f'SCENARIO D — C + SMALL ORDER SURCHARGE\n  C + €{SURCHARGE_AMOUNT:.0f} surcharge on e-commerce orders below €{SURCHARGE_THRESHOLD:.0f}.',
-    'E': 'SCENARIO E — D + PARCEL CARRIER FOR E-COMMERCE\n  D + replace pallet carrier with DPD parcel service for e-commerce.',
+    'C': 'SCENARIO C — ALL DCs FOR E-COMMERCE\n  A + E-commerce: all products in all DCs, ship from cheapest DC per country. No consolidation.',
+    'D': f'SCENARIO D — SMALL ORDER SURCHARGE\n  A + €{SURCHARGE_AMOUNT:.0f} surcharge on e-commerce orders below €{SURCHARGE_THRESHOLD:.0f}. No consolidation.',
+    'E': 'SCENARIO E — PARCEL CARRIER FOR E-COMMERCE\n  A + replace pallet carrier with DPD parcel service for e-commerce. No consolidation.',
+    'F': f'SCENARIO F — C + D + E COMBINED\n  All DCs + €{SURCHARGE_AMOUNT:.0f} surcharge + parcel carrier for e-commerce. No consolidation.',
 }
 
 def print_scenario(s, name):
@@ -278,7 +297,7 @@ def print_scenario(s, name):
     if has_sur: print(f" {fmt(t['Surcharge']):>12} {fmt(t['Net_Transport']):>18}", end="")
     print(f" {t['Neg_Shipments']:>10,.0f} {nr:>6.1f}%")
 
-for name in ['A','B','C','D','E']:
+for name in ['A','B','C','D','E','F']:
     print_scenario(summaries[name], name)
 
 # =============================================================================
@@ -299,84 +318,84 @@ print(f"  COMPARISON — ALL SCENARIOS vs CURRENT (A)")
 print(f"{'='*155}")
 
 print(f"\n  {'Channel':<14} {'Metric':<26} {'A (Current)':>16} {'B (Consol.)':>16} "
-      f"{'C (+AllDC)':>16} {'D (+Surchg)':>16} {'E (+Parcel)':>16}")
-print(f"  {'─'*122}")
+      f"{'C (AllDC)':>16} {'D (Surchg)':>16} {'E (Parcel)':>16} {'F (C+D+E)':>16}")
+print(f"  {'─'*140}")
 
 for ch in ['E-commerce','Pharmacy','Retail','Retail Sport']:
-    rows = {n: aggs[n][aggs[n]['Channel']==ch].iloc[0] for n in 'ABCDE'}
+    rows = {n: aggs[n][aggs[n]['Channel']==ch].iloc[0] for n in 'ABCDEF'}
     ra = rows['A']
 
     print(f"  {ch:<14} {'Orders (received)':<26} ", end="")
-    for n in 'ABCDE': print(f"{rows[n]['Orders']:>16,.0f}", end="")
+    for n in 'ABCDEF': print(f"{rows[n]['Orders']:>16,.0f}", end="")
     print()
 
     print(f"  {'':<14} {'Shipments (sent)':<26} ", end="")
-    for n in 'ABCDE': print(f"{rows[n]['Shipments']:>16,.0f}", end="")
+    for n in 'ABCDEF': print(f"{rows[n]['Shipments']:>16,.0f}", end="")
     print()
 
     print(f"  {'':<14} {'Pallets':<26} ", end="")
-    for n in 'ABCDE': print(f"{rows[n]['Pallets']:>16,.0f}", end="")
+    for n in 'ABCDEF': print(f"{rows[n]['Pallets']:>16,.0f}", end="")
     print()
 
     if ch == 'E-commerce':
         print(f"  {'':<14} {'Parcels':<26} ", end="")
-        for n in 'ABCDE': print(f"{rows[n]['Parcels']:>16,.0f}", end="")
+        for n in 'ABCDEF': print(f"{rows[n]['Parcels']:>16,.0f}", end="")
         print()
 
     print(f"  {'':<14} {'Transport Cost':<26} ", end="")
-    for n in 'ABCDE': print(f"{fmt(rows[n]['Transport']):>16}", end="")
+    for n in 'ABCDEF': print(f"{fmt(rows[n]['Transport']):>16}", end="")
     print()
 
     if ch == 'E-commerce':
         print(f"  {'':<14} {'Surcharge Revenue':<26} ", end="")
-        for n in 'ABCDE': print(f"{fmt(rows[n]['Surcharge']):>16}", end="")
+        for n in 'ABCDEF': print(f"{fmt(rows[n]['Surcharge']):>16}", end="")
         print()
         print(f"  {'':<14} {'Net Transport Cost':<26} ", end="")
-        for n in 'ABCDE': print(f"{fmt(rows[n]['Net']):>16}", end="")
+        for n in 'ABCDEF': print(f"{fmt(rows[n]['Net']):>16}", end="")
         print()
 
-    neg_rates = {n: rows[n]['Neg']/rows[n]['Shipments']*100 for n in 'ABCDE'}
+    neg_rates = {n: rows[n]['Neg']/rows[n]['Shipments']*100 for n in 'ABCDEF'}
     print(f"  {'':<14} {'Neg. Contribution Rate':<26} ", end="")
-    for n in 'ABCDE': print(f"{neg_rates[n]:>15.1f}%", end="")
+    for n in 'ABCDEF': print(f"{neg_rates[n]:>15.1f}%", end="")
     print()
 
     print(f"  {'':<14} {'Saving vs A':<26} {'—':>16}", end="")
-    for n in 'BCDE': print(f"{fmt(ra['Net']-rows[n]['Net']):>16}", end="")
+    for n in 'BCDEF': print(f"{fmt(ra['Net']-rows[n]['Net']):>16}", end="")
     print()
 
     if ra['Net'] > 0:
         print(f"  {'':<14} {'Saving %':<26} {'—':>16}", end="")
-        for n in 'BCDE': print(f"{(ra['Net']-rows[n]['Net'])/ra['Net']*100:>15.1f}%", end="")
+        for n in 'BCDEF': print(f"{(ra['Net']-rows[n]['Net'])/ra['Net']*100:>15.1f}%", end="")
         print()
     print()
 
 # Grand totals
-print(f"  {'─'*122}")
+print(f"  {'─'*140}")
 tots = {n: aggs[n][['Transport','Surcharge','Net','Shipments','Pallets','Parcels','Neg','Orders']].sum()
-        for n in 'ABCDE'}
+        for n in 'ABCDEF'}
 
 print(f"  {'ALL CHANNELS':<14} {'Orders (received)':<26} ", end="")
-for n in 'ABCDE': print(f"{tots[n]['Orders']:>16,.0f}", end="")
+for n in 'ABCDEF': print(f"{tots[n]['Orders']:>16,.0f}", end="")
 print()
 
 print(f"  {'':<14} {'Shipments (sent)':<26} ", end="")
-for n in 'ABCDE': print(f"{tots[n]['Shipments']:>16,.0f}", end="")
+for n in 'ABCDEF': print(f"{tots[n]['Shipments']:>16,.0f}", end="")
 print()
 
 print(f"  {'':<14} {'Net Transport Cost':<26} ", end="")
-for n in 'ABCDE': print(f"{fmt(tots[n]['Net']):>16}", end="")
+for n in 'ABCDEF': print(f"{fmt(tots[n]['Net']):>16}", end="")
 print()
 
 print(f"  {'':<14} {'Neg. Contribution Rate':<26} ", end="")
-for n in 'ABCDE': print(f"{tots[n]['Neg']/tots[n]['Shipments']*100:>15.1f}%", end="")
+for n in 'ABCDEF': print(f"{tots[n]['Neg']/tots[n]['Shipments']*100:>15.1f}%", end="")
 print()
 
 print(f"  {'':<14} {'SAVING vs A':<26} {'—':>16}", end="")
-for n in 'BCDE': print(f"{fmt(tots['A']['Net']-tots[n]['Net']):>16}", end="")
+for n in 'BCDEF': print(f"{fmt(tots['A']['Net']-tots[n]['Net']):>16}", end="")
 print()
 
 print(f"  {'':<14} {'SAVING %':<26} {'—':>16}", end="")
-for n in 'BCDE': print(f"{(tots['A']['Net']-tots[n]['Net'])/tots['A']['Net']*100:>15.1f}%", end="")
+for n in 'BCDEF': print(f"{(tots['A']['Net']-tots[n]['Net'])/tots['A']['Net']*100:>15.1f}%", end="")
 print()
 
 # =============================================================================
@@ -395,29 +414,29 @@ def yearly_ecom(s):
     e['CostPerOrd'] = e['Net']/e['Orders']
     return e
 
-yr = {n: yearly_ecom(summaries[n]) for n in 'ABCDE'}
+yr = {n: yearly_ecom(summaries[n]) for n in 'ABCDEF'}
 
 print(f"\n  {'Year':<6} {'Ord':>5}", end="")
-for n in 'ABCDE': print(f"  {n+' Net':>14} {n+' Neg%':>7}", end="")
+for n in 'ABCDEF': print(f"  {n+' Net':>14} {n+' Neg%':>7}", end="")
 print()
-print(f"  {'─'*135}")
+print(f"  {'─'*158}")
 
 for y in sorted(yr['A']['Year'].unique()):
-    rows = {n: yr[n][yr[n]['Year']==y].iloc[0] for n in 'ABCDE'}
+    rows = {n: yr[n][yr[n]['Year']==y].iloc[0] for n in 'ABCDEF'}
     print(f"  {y:<6} {rows['A']['Orders']:>5,.0f}", end="")
-    for n in 'ABCDE': print(f"  {fmt(rows[n]['Net']):>14} {rows[n]['NegRate']:>6.1f}%", end="")
+    for n in 'ABCDEF': print(f"  {fmt(rows[n]['Net']):>14} {rows[n]['NegRate']:>6.1f}%", end="")
     print()
 
 # Totals
-t = {n: yr[n].sum() for n in 'ABCDE'}
+t = {n: yr[n].sum() for n in 'ABCDEF'}
 print(f"\n  {'TOT':<6} {t['A']['Orders']:>5,.0f}", end="")
-for n in 'ABCDE':
+for n in 'ABCDEF':
     net = t[n]['Net']; neg_r = t[n]['Neg']/t[n]['Ships']*100
     print(f"  {fmt(net):>14} {neg_r:>6.1f}%", end="")
 print()
 
 print(f"\n  Cost per e-commerce order:")
-for n in 'ABCDE':
+for n in 'ABCDEF':
     print(f"    {n}: {t[n]['Net']/t[n]['Orders']:>8.2f} EUR", end="")
 print()
 
@@ -425,8 +444,8 @@ print()
 # EXECUTIVE SUMMARY
 # =============================================================================
 ea = aggs['A'][aggs['A']['Channel']=='E-commerce'].iloc[0]
-ee = aggs['E'][aggs['E']['Channel']=='E-commerce'].iloc[0]
-ta = tots['A']; te = tots['E']
+ef = aggs['F'][aggs['F']['Channel']=='E-commerce'].iloc[0]
+ta = tots['A']; tf = tots['F']
 
 print(f"""
 
@@ -438,35 +457,37 @@ print(f"""
   ┌──────┬──────────────────────────────────────────────────────────────────────────────────────────────────────┐
   │  A   │ Current: 1 order = 1 pallet, no consolidation, pallet carrier for all channels                     │
   │  B   │ A + consolidate same-day shipments within same DC (all channels)                                    │
-  │  C   │ B + stock all products in all DCs for e-commerce (ship from cheapest DC per country)                │
-  │  D   │ C + €{SURCHARGE_AMOUNT:.0f} surcharge on e-commerce orders below €{SURCHARGE_THRESHOLD:.0f}                                                           │
-  │  E   │ D + replace pallet carrier with DPD parcel service for e-commerce                                   │
+  │  C   │ A + stock all products in all DCs for e-commerce. No consolidation.                                 │
+  │  D   │ A + €{SURCHARGE_AMOUNT:.0f} surcharge on e-commerce orders below €{SURCHARGE_THRESHOLD:.0f}. No consolidation.                                     │
+  │  E   │ A + replace pallet carrier with DPD parcel service for e-commerce. No consolidation.                │
+  │  F   │ C + D + E Combined (All DCs + Surcharge + Parcel carrier). No consolidation.                        │
   └──────┴──────────────────────────────────────────────────────────────────────────────────────────────────────┘
 
   Note: Total orders received = {ta['Orders']:,.0f} in ALL scenarios (orders don't change, only shipments do).
 
   TOTAL NET TRANSPORT COST (2023-2025):
-  ┌────────────────────────────┬──────────────────┬──────────────────┬──────────────────┬────────────────────┐
-  │ Scenario                   │     Net Cost     │  Saving vs A     │  Saving %        │ Neg. Contrib. Rate │
-  ├────────────────────────────┼──────────────────┼──────────────────┼──────────────────┼────────────────────┤
-  │ A  Current                 │ {fmt(tots['A']['Net']):>16} │        —         │       —          │ {tots['A']['Neg']/tots['A']['Shipments']*100:>16.1f}%  │
-  │ B  Consolidation           │ {fmt(tots['B']['Net']):>16} │ {fmt(ta['Net']-tots['B']['Net']):>16} │ {(ta['Net']-tots['B']['Net'])/ta['Net']*100:>14.1f}%  │ {tots['B']['Neg']/tots['B']['Shipments']*100:>16.1f}%  │
-  │ C  B + All DCs e-com       │ {fmt(tots['C']['Net']):>16} │ {fmt(ta['Net']-tots['C']['Net']):>16} │ {(ta['Net']-tots['C']['Net'])/ta['Net']*100:>14.1f}%  │ {tots['C']['Neg']/tots['C']['Shipments']*100:>16.1f}%  │
-  │ D  C + Surcharge           │ {fmt(tots['D']['Net']):>16} │ {fmt(ta['Net']-tots['D']['Net']):>16} │ {(ta['Net']-tots['D']['Net'])/ta['Net']*100:>14.1f}%  │ {tots['D']['Neg']/tots['D']['Shipments']*100:>16.1f}%  │
-  │ E  D + Parcel carrier      │ {fmt(tots['E']['Net']):>16} │ {fmt(ta['Net']-tots['E']['Net']):>16} │ {(ta['Net']-tots['E']['Net'])/ta['Net']*100:>14.1f}%  │ {tots['E']['Neg']/tots['E']['Shipments']*100:>16.1f}%  │
-  └────────────────────────────┴──────────────────┴──────────────────┴──────────────────┴────────────────────┘
+  ┌────────────────────────────┬──────────────────┬──────────────────┬────────────────────┐
+  │ Scenario                   │     Net Cost     │  Saving vs A (%) │ Neg. Contrib. Rate │
+  ├────────────────────────────┼──────────────────┼──────────────────┼────────────────────┤
+  │ A  Current                 │ {fmt(tots['A']['Net']):>16} │        —         │ {tots['A']['Neg']/tots['A']['Shipments']*100:>16.1f}%  │
+  │ B  Consolidation           │ {fmt(tots['B']['Net']):>16} │ {(ta['Net']-tots['B']['Net'])/ta['Net']*100:>15.1f}% │ {tots['B']['Neg']/tots['B']['Shipments']*100:>16.1f}%  │
+  │ C  All DCs e-com           │ {fmt(tots['C']['Net']):>16} │ {(ta['Net']-tots['C']['Net'])/ta['Net']*100:>15.1f}% │ {tots['C']['Neg']/tots['C']['Shipments']*100:>16.1f}%  │
+  │ D  Surcharge               │ {fmt(tots['D']['Net']):>16} │ {(ta['Net']-tots['D']['Net'])/ta['Net']*100:>15.1f}% │ {tots['D']['Neg']/tots['D']['Shipments']*100:>16.1f}%  │
+  │ E  Parcel carrier          │ {fmt(tots['E']['Net']):>16} │ {(ta['Net']-tots['E']['Net'])/ta['Net']*100:>15.1f}% │ {tots['E']['Neg']/tots['E']['Shipments']*100:>16.1f}%  │
+  │ F  C + D + E Combined      │ {fmt(tots['F']['Net']):>16} │ {(ta['Net']-tots['F']['Net'])/ta['Net']*100:>15.1f}% │ {tots['F']['Neg']/tots['F']['Shipments']*100:>16.1f}%  │
+  └────────────────────────────┴──────────────────┴──────────────────┴────────────────────┘
 
-  INCREMENTAL VALUE OF EACH LEVER:
-    B  Consolidation only:         {fmt(tots['A']['Net']-tots['B']['Net']):>20}  (Neg rate: {tots['A']['Neg']/tots['A']['Shipments']*100:.1f}% → {tots['B']['Neg']/tots['B']['Shipments']*100:.1f}%)
-    C  + All DCs for e-commerce:   {fmt(tots['B']['Net']-tots['C']['Net']):>20}  (Neg rate: {tots['B']['Neg']/tots['B']['Shipments']*100:.1f}% → {tots['C']['Neg']/tots['C']['Shipments']*100:.1f}%)
-    D  + Surcharge:                {fmt(tots['C']['Net']-tots['D']['Net']):>20}  (Neg rate: {tots['C']['Neg']/tots['C']['Shipments']*100:.1f}% → {tots['D']['Neg']/tots['D']['Shipments']*100:.1f}%)
-    E  + Parcel carrier:           {fmt(tots['D']['Net']-tots['E']['Net']):>20}  (Neg rate: {tots['D']['Neg']/tots['D']['Shipments']*100:.1f}% → {tots['E']['Neg']/tots['E']['Shipments']*100:.1f}%)
+  INCREMENTAL VALUE OF EACH LEVER vs A:
+    B  Consolidation only:         {fmt(tots['A']['Net']-tots['B']['Net']):>20}
+    C  All DCs for e-commerce:     {fmt(tots['A']['Net']-tots['C']['Net']):>20}
+    D  Surcharge:                  {fmt(tots['A']['Net']-tots['D']['Net']):>20}
+    E  Parcel carrier:             {fmt(tots['A']['Net']-tots['E']['Net']):>20}
     ─────────────────────────────────────────────────────────
-    TOTAL:                         {fmt(tots['A']['Net']-tots['E']['Net']):>20}
+    F  COMBINED (C+D+E):           {fmt(tots['A']['Net']-tots['F']['Net']):>20}
 
   E-COMMERCE:
-    Cost per order:      A: {ea['Net']/ea['Orders']:.2f}€  →  E: {ee['Net']/ee['Orders']:.2f}€  (−{(ea['Net']/ea['Orders'])-(ee['Net']/ee['Orders']):.2f}€/order, {((ea['Net']/ea['Orders'])-(ee['Net']/ee['Orders']))/(ea['Net']/ea['Orders'])*100:.0f}% reduction)
-    Neg. contribution:   A: {ea['Neg']/ea['Shipments']*100:.1f}%  →  E: {ee['Neg']/ee['Shipments']*100:.1f}%
+    Cost per order:      A: {ea['Net']/ea['Orders']:.2f}€  →  F: {ef['Net']/ef['Orders']:.2f}€  (−{(ea['Net']/ea['Orders'])-(ef['Net']/ef['Orders']):.2f}€/order, {((ea['Net']/ea['Orders'])-(ef['Net']/ef['Orders']))/(ea['Net']/ea['Orders'])*100:.0f}% reduction)
+    Neg. contribution:   A: {ea['Neg']/ea['Shipments']*100:.1f}%  →  F: {ef['Neg']/ef['Shipments']*100:.1f}%
 
 {'='*155}
   HOW IS NEGATIVE CONTRIBUTION COMPUTED?
@@ -512,21 +533,23 @@ ecom_b = aggs['B'][aggs['B']['Channel']=='E-commerce'].iloc[0]
 ecom_c = aggs['C'][aggs['C']['Channel']=='E-commerce'].iloc[0]
 ecom_d = aggs['D'][aggs['D']['Channel']=='E-commerce'].iloc[0]
 ecom_e = aggs['E'][aggs['E']['Channel']=='E-commerce'].iloc[0]
+ecom_f = aggs['F'][aggs['F']['Channel']=='E-commerce'].iloc[0]
 
 e_rows = {
     'A': ('A  Current',            ecom_a['Net'], 0,                           ecom_a['Neg'] / ecom_a['Shipments'] * 100),
-    'B': ('B  Consolidation',      ecom_b['Net'], ecom_a['Net'] - ecom_b['Net'], ecom_b['Neg'] / ecom_b['Shipments'] * 100),
-    'C': ('C  B + All DCs e-com',  ecom_c['Net'], ecom_a['Net'] - ecom_c['Net'], ecom_c['Neg'] / ecom_c['Shipments'] * 100),
-    'D': ('D  C + Surcharge',      ecom_d['Net'], ecom_a['Net'] - ecom_d['Net'], ecom_d['Neg'] / ecom_d['Shipments'] * 100),
-    'E': ('E  D + Parcel carrier', ecom_e['Net'], ecom_a['Net'] - ecom_e['Net'], ecom_e['Neg'] / ecom_e['Shipments'] * 100)
+    'B': ('B  Consolidation',      ecom_b['Net'], (ecom_a['Net'] - ecom_b['Net'])/ecom_a['Net']*100, ecom_b['Neg'] / ecom_b['Shipments'] * 100),
+    'C': ('C  All DCs e-com',      ecom_c['Net'], (ecom_a['Net'] - ecom_c['Net'])/ecom_a['Net']*100, ecom_c['Neg'] / ecom_c['Shipments'] * 100),
+    'D': ('D  Surcharge',          ecom_d['Net'], (ecom_a['Net'] - ecom_d['Net'])/ecom_a['Net']*100, ecom_d['Neg'] / ecom_d['Shipments'] * 100),
+    'E': ('E  Parcel carrier',     ecom_e['Net'], (ecom_a['Net'] - ecom_e['Net'])/ecom_a['Net']*100, ecom_e['Neg'] / ecom_e['Shipments'] * 100),
+    'F': ('F  C + D + E Combined', ecom_f['Net'], (ecom_a['Net'] - ecom_f['Net'])/ecom_a['Net']*100, ecom_f['Neg'] / ecom_f['Shipments'] * 100)
 }
 
 print("  ┌────────────────────────────┬────────────────────┬────────────────────┬──────────────────────┐")
-print("  │ Scenario                   │      Net Cost      │    Saving vs A     │ Negative Orders Rate │")
+print("  │ Scenario                   │      Net Cost      │   Saving vs A (%)  │ Negative Orders Rate │")
 print("  ├────────────────────────────┼────────────────────┼────────────────────┼──────────────────────┤")
 for k, (name, net, sav, neg) in e_rows.items():
-    sav_str = fmt(sav) if k != 'A' else "—"
-    print(f"  │ {name:<26} │ {fmt(net):>18} │ {sav_str:>18} │ {neg:>19.1f}% │")
+    sav_str = f"{sav:>17.1f}%" if k != 'A' else "               —  "
+    print(f"  │ {name:<26} │ {fmt(net):>18} │ {sav_str} │ {neg:>19.1f}% │")
 print("  └────────────────────────────┴────────────────────┴────────────────────┴──────────────────────┘")
 print("\n")
 
@@ -534,7 +557,7 @@ print("""
     Transport:        1 pallet × ~€57 + 0.06kg × ~€0.07 = €57.00
     Contribution:     €8.96 − €57.00                = −€48.04  ← NEGATIVE
 
-  Same order in Scenario E (parcel carrier):
+  Same order in Scenario F (parcel carrier & surcharge applied):
     Revenue:          €14.00
     COGS:             € 5.04
     Gross Profit:     € 8.96
@@ -545,6 +568,6 @@ print("""
 
   The negative contribution rate is the percentage of shipments where this happens.
   In Scenario A, 91% of e-commerce shipments lose money.
-  In Scenario E, this drops to 32% — because the parcel cost (€8-19) is much closer
+  In Scenario F, this drops significantly — because the parcel cost (€8-19) is much closer
   to the gross profit (€5-25) than the pallet cost (€43-65) ever was.
 """)
