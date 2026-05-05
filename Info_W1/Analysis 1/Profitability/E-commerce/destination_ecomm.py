@@ -1,11 +1,14 @@
 import pandas as pd
-import os
+from pathlib import Path
+
+# Construct the file paths relative to this script's location
+current_dir = Path(__file__).parent
+data_dir = current_dir / '..' / '..' / '..' / 'Data'
 
 # Load the data
-base_path = os.path.join(os.path.dirname(__file__), '../../Data')
-orders_df = pd.read_csv(os.path.join(base_path, 'Order_ERP.csv'), sep=';')
-customers_df = pd.read_csv(os.path.join(base_path, 'Costumer_Master.csv'), sep=';')
-ship_to_df = pd.read_csv(os.path.join(base_path, 'Ship_to_master.csv'), sep=';')
+orders_df = pd.read_csv((data_dir / 'Order_ERP.csv').resolve(), sep=';')
+customers_df = pd.read_csv((data_dir / 'Costumer_Master.csv').resolve(), sep=';')
+ship_to_df = pd.read_csv((data_dir / 'Ship_to_master.csv').resolve(), sep=';')
 
 # Merge orders with customers and ship_to data
 df = orders_df.merge(customers_df[['Customer ID', 'Channel']], on='Customer ID', how='left')
@@ -33,27 +36,49 @@ df_ecomm_destination = df_ecomm_destination[['Year', 'Orders', 'Quantity_of_SKUs
 # Sort by Year (ascending) and Quantity of SKUs (descending highest to lowest)
 df_ecomm_destination = df_ecomm_destination.sort_values(by=['Year', 'Quantity_of_SKUs'], ascending=[True, False])
 
+# Add Rank column by Quantity of SKUs within each year
+df_ecomm_destination['Rank'] = df_ecomm_destination.groupby('Year')['Quantity_of_SKUs'].rank(method='min', ascending=False).astype(int)
+
 # Calculate yearly totals
 yearly_totals = df_ecomm_destination.groupby('Year').agg(
     Orders=('Orders', 'sum'),
     Quantity_of_SKUs=('Quantity_of_SKUs', 'sum')
 ).reset_index()
-yearly_totals['Destination'] = 'Total'
+yearly_totals['Destination'] = 'Total for Year'
+yearly_totals['Rank'] = None
 
-# Rearrange columns for consistency
-yearly_totals = yearly_totals[['Year', 'Orders', 'Quantity_of_SKUs', 'Destination']]
+# Calculate the grand total across all years
+grand_total = pd.DataFrame([{
+    'Year': 'All Years',
+    'Orders': yearly_totals['Orders'].sum(),
+    'Quantity_of_SKUs': yearly_totals['Quantity_of_SKUs'].sum(),
+    'Destination': 'Grand Total',
+    'Rank': None
+}])
 
 # Combine and sort to place the 'Total' row at the end of each year group
 df_ecomm_destination = pd.concat([df_ecomm_destination, yearly_totals], ignore_index=True)
-df_ecomm_destination['Is_Total'] = df_ecomm_destination['Destination'] == 'Total'
+df_ecomm_destination['Is_Total'] = df_ecomm_destination['Destination'] == 'Total for Year'
 df_ecomm_destination = df_ecomm_destination.sort_values(by=['Year', 'Is_Total', 'Quantity_of_SKUs'], ascending=[True, True, False])
 df_ecomm_destination.drop(columns=['Is_Total'], inplace=True)
+
+# Append the grand total at the very end
+df_ecomm_destination = pd.concat([df_ecomm_destination, grand_total], ignore_index=True)
 df_ecomm_destination = df_ecomm_destination.reset_index(drop=True)
+
+# Rearrange columns to put Rank properly
+df_ecomm_destination = df_ecomm_destination[['Year', 'Rank', 'Destination', 'Orders', 'Quantity_of_SKUs']]
 
 print("E-commerce Destination Orders Analysis:")
 print(df_ecomm_destination)
 
-# Save the results to a CSV file in the output folder
-output_path = os.path.join(os.path.dirname(__file__), '../output/ecomm_destination_results.csv')
-df_ecomm_destination.to_csv(output_path, index=False, sep=';')
-print(f"\nResults saved successfully to: {output_path}")
+# Save the results to a CSV and Excel file in the output folder
+output_dir = current_dir.parent.parent / 'output'
+output_dir.mkdir(parents=True, exist_ok=True)
+csv_output_path = output_dir / 'ecomm_destination_results.csv'
+excel_output_path = output_dir / 'ecomm_destination_results.xlsx'
+
+df_ecomm_destination.to_csv(csv_output_path.resolve(), index=False, sep=';')
+df_ecomm_destination.to_excel(excel_output_path.resolve(), index=False)
+print(f"\nResults saved successfully to: {csv_output_path.resolve()}")
+print(f"Results successfully saved to Excel sheet: {excel_output_path.resolve()}")
