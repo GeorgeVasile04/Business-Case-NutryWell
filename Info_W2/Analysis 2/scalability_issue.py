@@ -154,12 +154,12 @@ print("="*60)
 # STEP 2 – CAPACITY PROJECTION (15% annual growth)
 # =============================================================================
 
-MAX_CAPACITY   = 178_000   # max warehouse units
+MAX_CAPACITY   = 250_000   # BE-DC1 + BE-DC2 (178k) + BE-DC3/ACQ-DC1 (72k)
 WARN_PCT       = 0.75      # caution threshold
 CRIT_PCT       = 0.85      # critical threshold
 GROWTH_RATE    = 0.15      # annual growth rate
-WARN_LIMIT     = MAX_CAPACITY * WARN_PCT   # 133,500 units
-CRIT_LIMIT     = MAX_CAPACITY * CRIT_PCT   # 151,300 units
+WARN_LIMIT     = int(MAX_CAPACITY * WARN_PCT)   # 187,500 units
+CRIT_LIMIT     = int(MAX_CAPACITY * CRIT_PCT)   # 212,500 units
 
 # ── monthly unit demand per scenario ─────────────────────────────────────────
 # "Month" was added to combined in Step 1; derive it for nw_period separately
@@ -187,9 +187,9 @@ def capacity_projection(peak, avg, label, start_year=2025):
     print(f"\n{'-'*72}")
     print(f"  Scenario: {label}")
     print(f"{'-'*72}")
-    print(f"  Max warehouse capacity  : {MAX_CAPACITY:>10,} units")
-    print(f"  Caution threshold (75%) : {WARN_LIMIT:>10,.0f} units")
-    print(f"  Critical threshold (85%): {CRIT_LIMIT:>10,.0f} units")
+    print(f"  Max warehouse capacity        : {MAX_CAPACITY:>10,} units  (DC1+DC2: 178k  +  DC3/ACQ-DC1: 72k)")
+    print(f"  Caution threshold  (75% cap) : {WARN_LIMIT:>10,} units")
+    print(f"  Critical threshold (85% cap) : {CRIT_LIMIT:>10,} units")
     print(f"  Baseline peak month     : {peak:>10,.0f} units")
     print(f"  Baseline avg  month     : {avg:>10,.0f} units")
     print(f"  Annual growth rate      : {GROWTH_RATE*100:.0f}%")
@@ -266,12 +266,15 @@ print(f"  Current peak month (core only)     : {peak_nw:>8,.0f} units"
 print(f"  Current peak month (incl. acquired): {peak_all:>8,.0f} units"
       f"  ({peak_all/MAX_CAPACITY*100:.1f}% of capacity)  [{peak_month_all}]")
 print()
-print("  At 15% annual growth, capacity planning is urgent:")
-print(f"    Core only      - CAUTION zone reached in ~2 years, CRITICAL in ~3 years")
-print(f"    With acq. line - CAUTION zone reached in ~1 year,  CRITICAL in ~2-3 years")
+print(f"  Total capacity : {MAX_CAPACITY:,} units  (DC1+DC2: 178k  +  DC3/ACQ-DC1: 72k)")
+print(f"  Caution (75%)  : {WARN_LIMIT:,} units   |   Critical (85%): {CRIT_LIMIT:,} units")
 print()
-print("  Recommendation: if 15% growth materialises, NutryWell must plan")
-print("  warehouse expansion or outsourcing BEFORE the caution threshold is hit.")
+print("  At 15% annual growth (Core + Acquired Line, peak-month basis):")
+print("    CAUTION zone (75%)  reached in 2029  (+4 years)")
+print("    CRITICAL zone (85%) reached in 2030  (+5 years)")
+print()
+print("  With the expanded DC network (250k) NutryWell gains ~2 extra years of")
+print("  runway vs the original 178k footprint. Plan DC expansion from 2028.")
 print(f"{'='*72}")
 
 # =============================================================================
@@ -333,11 +336,11 @@ ax.axhline(75,  color="#d35400", linewidth=1.5, linestyle="--", zorder=4)
 # draw outside the axes box into the right margin)
 common = dict(xycoords=("axes fraction", "data"), textcoords="offset points",
               xytext=(10, 0), va="center", ha="left", clip_on=False)
-ax.annotate(f"Critical threshold — {CRIT_LIMIT:,.0f} units",
+ax.annotate(f"Critical — {CRIT_LIMIT:,} units (85%)",
             xy=(1.0, 85), fontsize=9, color="#c0392b",
             fontweight="bold", **common)
-ax.annotate(f"Caution threshold — {WARN_LIMIT:,.0f} units",
-            xy=(1.0, 75),  fontsize=9, color="#d35400",
+ax.annotate(f"Caution — {WARN_LIMIT:,} units (75%)",
+            xy=(1.0, 75), fontsize=9, color="#d35400",
             fontweight="bold", **common)
 
 # ── axes formatting ───────────────────────────────────────────────────────────
@@ -373,7 +376,7 @@ fig.text(0.08, 0.915,
          f"NutryWell Core + Acquired Line   |   "
          f"Baseline peak: {peak_all:,.0f} units / month ({peak_month_all})   |   "
          f"+{GROWTH_RATE*100:.0f}% annual growth   |   "
-         f"Max capacity: {MAX_CAPACITY:,} units",
+         f"Total capacity: {MAX_CAPACITY:,} units (DC1+DC2: 178k  +  DC3/ACQ-DC1: 72k)",
          fontsize=9.5, va="top", ha="left", color="#666666")
 
 plt.savefig("Info_W2/Analysis 2/capacity_projection.png", dpi=150, bbox_inches="tight")
