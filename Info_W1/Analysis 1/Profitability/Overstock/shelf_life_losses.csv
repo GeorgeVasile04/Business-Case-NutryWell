@@ -1,0 +1,18 @@
+SKU,Name,SL_months,Cost_EUR,Price_EUR,S1_expired,S1_at_risk,S1_total,S1_loss_EUR,S2_expired,S2_at_risk,S2_total,S2_loss_EUR
+NW-COLL,Collagen Powder 300g,24,7.0,24.0,0.0,2274.0,2274.0,15827.0,0.0,0.0,0.0,0.0
+NW-DETOX,Detox Program 7 Days,12,10.2,35.0,69689.0,10780.0,80469.0,816760.4,0.0,0.0,0.0,0.0
+NW-ENERGY,Energy Boost Liquid (10),12,4.5,15.0,69189.0,8668.0,77857.0,350356.5,0.0,850.2,850.2,3825.7
+NW-HYDR,Hydration Electrolytes,18,5.1,16.0,122650.0,26731.0,149381.0,764830.7,0.0,0.0,0.0,0.0
+NW-IMMUNO,Immunity Booster,24,4.0,11.0,0.0,25627.0,25627.0,101482.9,0.0,0.0,0.0,0.0
+NW-MAG,Magnesium Calm,36,3.5,10.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+NW-MULTI,Multivitamin Daily,36,3.0,8.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+NW-OMEGA,Omega 3 Triple Action,24,4.8,12.0,0.0,10702.0,10702.0,51369.6,0.0,0.0,0.0,0.0
+NW-SLEEP,Sleep Support Gummies,18,5.9,18.0,16226.0,19048.0,35274.0,209527.6,0.0,0.0,0.0,0.0
+NW-VITC,Vitamin C 1000mg,36,2.5,6.5,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+NW-VITD,Vitamin D3 2000IU,36,1.8,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+NW-ZINC,Zinc Immunity,36,2.8,7.5,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+NW-9010,Protein Blend 1kg,24,10.9,32.0,12830.0,22580.0,35410.0,385260.8,0.0,0.0,0.0,0.0
+NW-9011,Ashwagandha Balance (60 caps),36,5.0,14.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+NW-9012,Vitamin B12 Energy (90 tabs),36,2.5,6.5,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+NW-9013,Iron + Vitamin C (60 tabs),36,3.5,9.5,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+NW-9014,Prebiotic Fiber Sachets (30x10g),24,7.0,22.0,8875.0,14348.0,23223.0,163489.9,0.0,0.0,0.0,0.0
