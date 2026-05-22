@@ -1,312 +1,284 @@
 """
-NutrYWell — Demand Forecasting (17 existing SKUs)
-==================================================
-Builds monthly demand series from ORDER_ERP, fits multiple forecasting
-techniques per SKU, evaluates them on a hold-out test set, and exports
-forecasts + accuracy metrics.
+NutryWell — Combined Demand Forecasting
+========================================
+Computes total monthly demand (NutryWell + Acquired portfolio), fits
+Holt-Winters (additive) and Linear Additive Seasonal models on the
+training window, evaluates both on the Sep 2024–Sep 2025 test window,
+selects the best by RMSE, overlays a +10 % safety buffer, and shows
+NutryWell's historical flat ordering level (178k units/month).
 
-Methods implemented
--------------------
-1. Naive            — last observed value repeated
-2. Moving Average 3 — mean of last 3 months
-3. SES              — Simple Exponential Smoothing (optimized alpha)
-4. Holt             — Double Exp Smoothing (level + trend)
-5. Holt-Winters     — Triple Exp Smoothing, additive, 12-month seasonality
-6. Linear + seasonal— OLS on time-trend + month dummies
-
-Hold-out: last 6 months used as test window.
-Metric   : RMSE (primary) and MAE.
+Output: demand_forecast_combined.png  ->  Info_W1/output/
 """
 
 import warnings
 from pathlib import Path
+
 import numpy as np
 import pandas as pd
-from statsmodels.tsa.holtwinters import SimpleExpSmoothing, Holt, ExponentialSmoothing
+import matplotlib
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
+import matplotlib.ticker as mticker
+from statsmodels.tsa.holtwinters import ExponentialSmoothing, Holt
 
 warnings.filterwarnings("ignore")
 
-# ---------------------------------------------------------------- config
-PROJECT_DIR  = Path(__file__).resolve().parents[4]
-OUT_DIR      = PROJECT_DIR / "Info_W1" / "output"
+# ── paths ─────────────────────────────────────────────────────────────────────
+PROJECT_DIR    = Path(__file__).resolve().parents[4]
+OUT_DIR        = PROJECT_DIR / "Info_W1" / "output"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
-ERP_FILE     = PROJECT_DIR / "Info_W1" / "Data" / "Order_ERP.csv"
-PM_FILE      = PROJECT_DIR / "Info_W1" / "Data" / "Product_master.csv"
-PO_FILE      = PROJECT_DIR / "Info_W3" / "NutrYWell_PO.csv"
-TEST_MONTHS  = 6   # hold-out window for accuracy evaluation
-SEASON_PER   = 12  # monthly seasonality
+NW_ORDERS_FILE = PROJECT_DIR / "Info_W1" / "Data" / "Order_ERP.csv"
+NW_PROD_FILE   = PROJECT_DIR / "Info_W1" / "Data" / "Product_master.csv"
+AQ_ORDERS_FILE = PROJECT_DIR / "Info_W2" / "Data" / "Orders_ERP_Parent_company.csv"
 
-# ---------------------------------------------------------------- load data
-def load_demand():
-    """Return (demand_matrix, sku_list). demand_matrix: rows=months, cols=SKU."""
-    pm = pd.read_csv(PM_FILE, sep=";", decimal=",")
-    skus = pm["SKU"].tolist()
+# ── config ────────────────────────────────────────────────────────────────────
+TRAIN_END   = pd.Period("2024-08", freq="M")   # last month used for training
+GRAPH_START = pd.Period("2024-09", freq="M")   # forecast / evaluation window start
+GRAPH_END   = pd.Period("2025-09", freq="M")   # forecast / evaluation window end
+SEASON_PER  = 12
 
-    erp = pd.read_csv(ERP_FILE, sep=";", decimal=",")
-    erp = erp[erp["SKU"].isin(skus)].copy()
-    erp["Month"] = pd.to_datetime(erp["Order Date"], dayfirst=True, format="mixed").dt.to_period("M")
+SAFETY      = 0.10   # +10 %
 
-    dem = (erp.groupby(["Month", "SKU"])["Quantity"]
-              .sum()
-              .unstack(fill_value=0)
-              .sort_index())
+# ── design tokens ─────────────────────────────────────────────────────────────
+C_NW     = "#2E86AB"   # NutryWell demand bars — steel-blue
+C_AQ     = "#5C4E8C"   # Acquired demand bars  — purple
+C_ORDER  = "#E63946"   # NutryWell ordering level line — red
+C_HW     = "#27AE60"   # Holt-Winters — green
+C_LS     = "#E67E22"   # Linear Seasonal — orange
+C_BUF    = "#5FA8C0"   # +10 % band fill — light blue
+BG       = "#F7F9FC"   # figure background
+PANEL_BG = "#EEF2F7"   # axes background
 
-    # Ensure full month index & all 17 SKUs present
-    full_idx = pd.period_range(dem.index.min(), dem.index.max(), freq="M")
-    dem = dem.reindex(full_idx, fill_value=0)
-    for s in skus:
-        if s not in dem.columns:
-            dem[s] = 0
-    dem = dem[skus]
-    return dem, skus
+ORDER_LEVEL = 178_000  # NutryWell historical flat ordering level (DC1 + DC2)
 
-# ---------------------------------------------------------------- forecast methods
-def f_naive(train, h):
-    return np.repeat(train[-1], h)
 
-def f_moving_avg(train, h, window=3):
-    return np.repeat(np.mean(train[-window:]), h)
+# ── data loading ──────────────────────────────────────────────────────────────
+def load_monthly_demand() -> pd.DataFrame:
+    """Return DataFrame with columns [NutryWell, Acquired, Total] by Period."""
 
-def f_ses(train, h):
-    model = SimpleExpSmoothing(train, initialization_method="estimated").fit(optimized=True)
-    return np.asarray(model.forecast(h))
+    nw_prod = pd.read_csv(NW_PROD_FILE, sep=";", decimal=",")
+    nw_skus = set(nw_prod["SKU"])
 
-def f_holt(train, h):
-    model = Holt(train, initialization_method="estimated").fit(optimized=True)
-    return np.asarray(model.forecast(h))
+    nw = pd.read_csv(NW_ORDERS_FILE, sep=";", decimal=",")
+    nw = nw[nw["SKU"].isin(nw_skus)].copy()
+    nw["Month"] = (
+        pd.to_datetime(nw["Order Date"], dayfirst=True, format="mixed")
+        .dt.to_period("M")
+    )
+    nw_monthly = nw.groupby("Month")["Quantity"].sum().rename("NutryWell")
 
-def f_holt_winters(train, h, seasonal_periods=SEASON_PER):
-    if len(train) < 2 * seasonal_periods:
-        return f_holt(train, h)  # fallback if not enough seasons
-    model = ExponentialSmoothing(
-        train,
-        trend="add",
-        seasonal="add",
-        seasonal_periods=seasonal_periods,
-        initialization_method="estimated",
-    ).fit(optimized=True)
-    return np.asarray(model.forecast(h))
+    aq = pd.read_csv(AQ_ORDERS_FILE, sep=";", decimal=",")
+    aq["Month"] = (
+        pd.to_datetime(aq["Order Date"], dayfirst=False, format="mixed")
+        .dt.to_period("M")
+    )
+    aq_monthly = aq.groupby("Month")["Quantity"].sum().rename("Acquired")
 
-def f_linear_seasonal(train, h):
-    """OLS on time trend + 11 month dummies (closed-form, no sklearn dep)."""
-    n = len(train)
-    t = np.arange(n)
-    months = (t % 12)
-    # design matrix: intercept, trend, 11 dummies (drop Jan = 0)
-    X = np.ones((n, 1 + 1 + 11))
+    full_idx = pd.period_range(
+        min(nw_monthly.index.min(), aq_monthly.index.min()),
+        max(nw_monthly.index.max(), aq_monthly.index.max()),
+        freq="M",
+    )
+    df = pd.DataFrame(index=full_idx)
+    df["NutryWell"] = nw_monthly.reindex(full_idx, fill_value=0)
+    df["Acquired"]  = aq_monthly.reindex(full_idx, fill_value=0)
+    df["Total"]     = df["NutryWell"] + df["Acquired"]
+    return df
+
+
+# ── forecast methods ──────────────────────────────────────────────────────────
+def fit_holt_winters(y: np.ndarray, h: int) -> np.ndarray:
+    """Triple Exp Smoothing — additive trend + additive 12-month seasonality."""
+    for init in ("estimated", "heuristic"):
+        try:
+            m = ExponentialSmoothing(
+                y, trend="add", seasonal="add",
+                seasonal_periods=SEASON_PER,
+                initialization_method=init,
+            ).fit(optimized=True)
+            return np.clip(m.forecast(h), 0, None)
+        except Exception:
+            pass
+    # Fallback: Holt (trend only, no seasonality)
+    try:
+        m = Holt(y, initialization_method="estimated").fit(optimized=True)
+        return np.clip(m.forecast(h), 0, None)
+    except Exception:
+        return np.repeat(y[-1], h)
+
+
+def fit_linear_seasonal(y: np.ndarray, h: int, first_cal_month: int = 0) -> np.ndarray:
+    """OLS on time-trend + 11 calendar-month dummies (additive seasonality)."""
+    n  = len(y)
+    t  = np.arange(n)
+    cm = (first_cal_month + t) % 12           # calendar month index (0 = Jan)
+    X  = np.ones((n, 13))                     # intercept + trend + 11 dummies
     X[:, 1] = t
     for m in range(1, 12):
-        X[:, 1 + m] = (months == m).astype(float)
-    beta, *_ = np.linalg.lstsq(X, train, rcond=None)
-    t_f = np.arange(n, n + h)
-    months_f = (t_f % 12)
-    Xf = np.ones((h, 1 + 1 + 11))
+        X[:, 1 + m] = (cm == m).astype(float)
+    beta, *_ = np.linalg.lstsq(X, y, rcond=None)
+
+    t_f  = np.arange(n, n + h)
+    cm_f = (first_cal_month + t_f) % 12
+    Xf   = np.ones((h, 13))
     Xf[:, 1] = t_f
     for m in range(1, 12):
-        Xf[:, 1 + m] = (months_f == m).astype(float)
-    return Xf @ beta
+        Xf[:, 1 + m] = (cm_f == m).astype(float)
+    return np.clip(Xf @ beta, 0, None)
 
-METHODS = {
-    "Naive":            f_naive,
-    "MovingAvg3":       f_moving_avg,
-    "SES":              f_ses,
-    "Holt":             f_holt,
-    "HoltWinters":      f_holt_winters,
-    "LinearSeasonal":   f_linear_seasonal,
-}
 
-# ---------------------------------------------------------------- metrics
-def rmse(y_true, y_pred): return float(np.sqrt(np.mean((y_true - y_pred) ** 2)))
-def mae(y_true, y_pred):  return float(np.mean(np.abs(y_true - y_pred)))
-def mape(y_true, y_pred):
-    mask = y_true > 0
-    if mask.sum() == 0: return np.nan
-    return float(np.mean(np.abs((y_true[mask] - y_pred[mask]) / y_true[mask])) * 100)
+def rmse(actual: np.ndarray, pred: np.ndarray) -> float:
+    return float(np.sqrt(np.mean((actual - pred) ** 2)))
 
-# ---------------------------------------------------------------- per-SKU evaluation
-def evaluate_sku(series, sku):
-    """Return dict: method -> (forecast_test, rmse, mae, mape)."""
-    y = series.values.astype(float)
-    # Start from first non-zero month (product launch)
-    first_nz = np.argmax(y > 0)
-    y_active = y[first_nz:]
 
-    if len(y_active) <= TEST_MONTHS + 3:
-        return None, first_nz  # not enough history
+# ── plotting helpers ──────────────────────────────────────────────────────────
+def _style_ax(ax):
+    ax.set_facecolor(PANEL_BG)
+    for sp in ax.spines.values():
+        sp.set_visible(False)
+    ax.tick_params(length=0)
+    ax.yaxis.grid(True, color="white", linewidth=1.4, zorder=0)
+    ax.set_axisbelow(True)
 
-    train = y_active[:-TEST_MONTHS]
-    test  = y_active[-TEST_MONTHS:]
 
-    results = {}
-    for name, fn in METHODS.items():
-        try:
-            pred = np.clip(fn(train, TEST_MONTHS), 0, None)
-            results[name] = {
-                "forecast": pred,
-                "rmse": rmse(test, pred),
-                "mae":  mae(test, pred),
-                "mape": mape(test, pred),
-            }
-        except Exception as e:
-            results[name] = {"forecast": None, "rmse": np.inf,
-                             "mae": np.inf, "mape": np.nan, "error": str(e)}
-    return results, first_nz
+def _fmt_k(x, _):
+    return f"{x:,.0f}"
 
-# ---------------------------------------------------------------- full-history forecast
-def full_fit_forecast(series, method_name, h):
-    """Refit on full active history and produce h-step forecast."""
-    y = series.values.astype(float)
-    first_nz = np.argmax(y > 0)
-    y_active = y[first_nz:]
-    pred = METHODS[method_name](y_active, h)
-    return np.clip(pred, 0, None)
 
-# ---------------------------------------------------------------- main
+# ── main ─────────────────────────────────────────────────────────────────────
 def main():
-    demand, skus = load_demand()
-    print(f"Loaded demand: {demand.shape[0]} months × {demand.shape[1]} SKUs")
-    print(f"Range: {demand.index.min()} to {demand.index.max()}")
-    print(f"Hold-out for evaluation: last {TEST_MONTHS} months\n")
+    # ── 1. demand ─────────────────────────────────────────────────────────────
+    demand = load_monthly_demand()
 
-    test_months = demand.index[-TEST_MONTHS:]
+    train      = demand[demand.index <= TRAIN_END]["Total"]
+    fcst_idx   = pd.period_range(GRAPH_START, GRAPH_END, freq="M")
+    h          = len(fcst_idx)         # 13 months
 
-    # Per-SKU metrics
-    metrics_rows = []
-    # Per-SKU test-period forecasts by method
-    test_forecasts = {m: pd.DataFrame(index=test_months, columns=skus, dtype=float)
-                      for m in METHODS}
-    test_forecasts["Actual"] = demand.loc[test_months].copy()
-    champion = {}
+    actual_tot = demand["Total"].reindex(fcst_idx, fill_value=0)
+    actual_nw  = demand["NutryWell"].reindex(fcst_idx, fill_value=0)
+    actual_aq  = demand["Acquired"].reindex(fcst_idx, fill_value=0)
 
-    for sku in skus:
-        res, first_nz = evaluate_sku(demand[sku], sku)
-        if res is None:
-            print(f"  {sku}: insufficient history, skipping")
-            continue
-        for name, r in res.items():
-            metrics_rows.append({
-                "SKU": sku, "Method": name,
-                "RMSE": r["rmse"], "MAE": r["mae"], "MAPE_%": r["mape"],
-            })
-            if r["forecast"] is not None:
-                test_forecasts[name].loc[test_months, sku] = r["forecast"]
-        # champion = lowest RMSE
-        best = min(res.items(), key=lambda kv: kv[1]["rmse"])
-        champion[sku] = best[0]
-        print(f"  {sku:<10}  best = {best[0]:<16}  "
-              f"RMSE={best[1]['rmse']:,.0f}  MAE={best[1]['mae']:,.0f}")
+    y_train          = train.values.astype(float)
+    first_cal_month  = train.index[0].month - 1   # 0-indexed calendar month
 
-    metrics = pd.DataFrame(metrics_rows)
+    print(f"Training window : {train.index[0]} to {train.index[-1]}  ({len(train)} months)")
+    print(f"Forecast window : {fcst_idx[0]} to {fcst_idx[-1]}  ({h} months)")
+    print(f"Training total demand: {y_train.sum():,.0f} units\n")
 
-    # Aggregate ranking
-    agg = (metrics.groupby("Method")[["RMSE", "MAE", "MAPE_%"]]
-                   .mean()
-                   .sort_values("RMSE"))
-    print("\n=== Average accuracy across all SKUs (lower = better) ===")
-    print(agg.round(1).to_string())
-    print(f"\nGlobal best method by avg RMSE: {agg.index[0]}")
+    # ── 2. forecasts ──────────────────────────────────────────────────────────
+    hw_fcst = fit_holt_winters(y_train, h)
+    ls_fcst = fit_linear_seasonal(y_train, h, first_cal_month=first_cal_month)
 
-    champion_df = (pd.Series(champion, name="Champion_Method")
-                     .rename_axis("SKU").reset_index())
-    print("\n=== Champion method per SKU ===")
-    print(champion_df.to_string(index=False))
+    hw_rmse = rmse(actual_tot.values, hw_fcst)
+    ls_rmse = rmse(actual_tot.values, ls_fcst)
 
-    # -------- Full-history summary for Current, MovingAvg3, HoltWinters --------
-    sim_months = demand.index
-    
-    def get_global_forecast(method_name):
-        f_matrix = pd.DataFrame(index=sim_months, columns=skus, dtype=float)
-        for sku in skus:
-            y = demand[sku].values.astype(float)
-            first_nz = np.argmax(y > 0) if y.sum() > 0 else 0
-            # We want to create a simulation array for the entire period.
-            # Due to the simple methods we have, let's just generate the forecast trained on the first part,
-            # or simply generate the forecast for the whole horizon if it's Naive/Moving Avg.
-            # For simplicity let's use the fitted values for past + forecast for future.
-            
-            # Since the tools don't return fitted values by default, we will do a rolling in-sample forecast 
-            # for MovingAvg3 and use the model's fitted values + forecast for HoltWinters.
-            
-            yh = np.full(len(y), np.nan)
-            if method_name == "MovingAvg3":
-                for i in range(len(y)):
-                    if i >= first_nz + 3:
-                        yh[i] = np.mean(y[i-3:i])
-            elif method_name == "HoltWinters":
-                if len(y[first_nz:]) > 2 * 12:
-                    try:
-                        # optimized=True ensures statsmodels tests permutations to find the optimal alpha, beta, and gamma
-                        model = ExponentialSmoothing(y[first_nz:], trend="add", seasonal="add", seasonal_periods=12, initialization_method="estimated").fit(optimized=True)
-                        yh[first_nz:] = model.fittedvalues
-                        yh[first_nz] = np.nan
-                    except:
-                        pass
-                else:
-                    try:
-                        model = Holt(y[first_nz:], initialization_method="estimated").fit(optimized=True)
-                        yh[first_nz:] = model.fittedvalues
-                        yh[first_nz] = np.nan
-                    except:
-                        pass
-            elif method_name == "Holt":
-                try:
-                    # optimized=True finds optimal alpha and beta
-                    model = Holt(y[first_nz:], initialization_method="estimated").fit(optimized=True)
-                    yh[first_nz:] = model.fittedvalues
-                    yh[first_nz] = np.nan
-                except:
-                    pass
-            elif method_name == "LinearSeasonal":
-                try:
-                    y_act = y[first_nz:]
-                    n_act = len(y_act)
-                    t = np.arange(n_act)
-                    months = (t % 12)
-                    X = np.ones((n_act, 1 + 1 + 11))
-                    X[:, 1] = t
-                    for m in range(1, 12):
-                        X[:, 1 + m] = (months == m).astype(float)
-                    beta, *_ = np.linalg.lstsq(X, y_act, rcond=None)
-                    yh[first_nz:] = X @ beta
-                except:
-                    pass
-            
-            f_matrix[sku] = np.clip(yh, 0, None)
-        return f_matrix.sum(axis=1)
+    print(f"Holt-Winters RMSE      : {hw_rmse:>10,.1f}")
+    print(f"Linear Seasonal RMSE   : {ls_rmse:>10,.1f}")
 
-    po = pd.read_csv(PO_FILE, sep=";", decimal=",")
-    po = po[po["SKU"].isin(skus)].copy()
-    po["Month"] = pd.to_datetime(po["PO Date"], dayfirst=True, format="mixed").dt.to_period("M")
-    po_matrix = po.groupby(["Month", "SKU"])["Quantity Purchased (units)"].sum().unstack(fill_value=0)
-    current_sit = po_matrix.reindex(sim_months, fill_value=0).sum(axis=1)
+    # ── 3. model selection ────────────────────────────────────────────────────
+    if hw_rmse <= ls_rmse:
+        best_name, best_fcst, best_rmse = "Holt-Winters", hw_fcst, hw_rmse
+        other_name = "Linear + Seasonal"
+    else:
+        best_name, best_fcst, best_rmse = "Linear + Seasonal", ls_fcst, ls_rmse
+        other_name = "Holt-Winters"
 
-    summary_df = pd.DataFrame({
-        "Month": sim_months.astype(str),
-        "Actual Demand": demand.sum(axis=1).values,
-        "Current situation": current_sit.values,
-        "MovingAvg3": np.round(get_global_forecast("MovingAvg3").values),
-        "Holt": np.round(get_global_forecast("Holt").values),
-        "HoltWinters": np.round(get_global_forecast("HoltWinters").values),
-        "LinearSeasonal": np.round(get_global_forecast("LinearSeasonal").values)
-    })
+    print(f"\nSelected model : {best_name}  (lower RMSE)")
 
-    summary_out_file = OUT_DIR / "full_history_forecast_summary.xlsx"
-    summary_df.to_excel(summary_out_file, index=False)
-    print(f"\nSaved Full-history summary: {summary_out_file}")
+    buf10 = best_fcst * (1 + SAFETY)
 
-    # -------- export ------------------------------------------------
-    out_file = OUT_DIR / "forecasts.xlsx"
-    with pd.ExcelWriter(out_file, engine="openpyxl") as w:
-        demand.astype(int).to_excel(w, sheet_name="Demand_History")
-        metrics.round(2).to_excel(w, sheet_name="Accuracy_Per_SKU", index=False)
-        agg.round(2).to_excel(w, sheet_name="Accuracy_Avg_By_Method")
-        champion_df.to_excel(w, sheet_name="Champion_Per_SKU", index=False)
-        for name, df in test_forecasts.items():
-            df.round(1).to_excel(w, sheet_name=f"TestFcst_{name[:20]}")
+    # ── 4. figure ─────────────────────────────────────────────────────────────
+    fig = plt.figure(figsize=(17, 9.5))
+    fig.patch.set_facecolor(BG)
 
-    print(f"\nSaved: {out_file}")
-    return demand, metrics, champion, test_forecasts
+    fig.subplots_adjust(left=0.07, right=0.97, top=0.88, bottom=0.09)
+    ax_main = fig.add_subplot(1, 1, 1)
+    _style_ax(ax_main)
+
+    x       = np.arange(h)
+    bw      = 0.55
+    xlabels = [p.strftime("%b\n%Y") for p in fcst_idx]
+
+    # ── main panel ────────────────────────────────────────────────────────────
+    # Stacked actual demand bars
+    ax_main.bar(x, actual_nw.values, width=bw,
+                color=C_NW, alpha=0.85, label="NutryWell — actual demand", zorder=2)
+    ax_main.bar(x, actual_aq.values, width=bw, bottom=actual_nw.values,
+                color=C_AQ, alpha=0.85, label="Acquired portfolio — actual demand", zorder=2)
+
+    # NutryWell flat ordering level (178k / month)
+    ax_main.axhline(y=ORDER_LEVEL, color=C_ORDER, lw=2.2, ls="-",
+                    zorder=5, label="NutryWell actual forecast")
+    ax_main.text(h - 0.45, ORDER_LEVEL * 1.015, f"{ORDER_LEVEL//1000}k",
+                 color=C_ORDER, fontsize=8.5, fontweight="bold", va="bottom", ha="right")
+
+    # +10 % safety buffer fill
+    ax_main.fill_between(x, best_fcst, buf10,
+                         color=C_BUF, alpha=0.35, zorder=3,
+                         label="+10 % safety buffer")
+    ax_main.plot(x, buf10, color=C_BUF, lw=1.6, ls="--", zorder=4, alpha=0.85)
+
+    # Forecast lines
+    hw_lw = 3.0 if best_name == "Holt-Winters"     else 2.0
+    ls_lw = 3.0 if best_name == "Linear + Seasonal" else 2.0
+    hw_zo = 7   if best_name == "Holt-Winters"     else 6
+    ls_zo = 7   if best_name == "Linear + Seasonal" else 6
+
+    ax_main.plot(x, hw_fcst, color=C_HW, lw=hw_lw,
+                 ls="-", marker="o", ms=5, zorder=hw_zo,
+                 label=f"Holt-Winters  (RMSE = {hw_rmse:,.0f})"
+                       + ("  [selected]" if best_name == "Holt-Winters" else ""))
+    ax_main.plot(x, ls_fcst, color=C_LS, lw=ls_lw,
+                 ls="--", marker="s", ms=5, zorder=ls_zo,
+                 label=f"Linear + Seasonal  (RMSE = {ls_rmse:,.0f})"
+                       + ("  [selected]" if best_name == "Linear + Seasonal" else ""))
+
+    # Annotate peak of +10 % buffer
+    pk = int(np.argmax(buf10))
+    ax_main.annotate(
+        f"Peak +10%\n{buf10[pk]:,.0f} units",
+        xy=(pk, buf10[pk]),
+        xytext=(pk + (1 if pk < h - 2 else -2), buf10[pk] * 1.045),
+        fontsize=8, color=C_BUF,
+        arrowprops=dict(arrowstyle="-|>", color=C_BUF, lw=1.1),
+        ha="center",
+    )
+
+    ax_main.set_xticks(x)
+    ax_main.set_xticklabels(xlabels, fontsize=9.5)
+    ax_main.yaxis.set_major_formatter(mticker.FuncFormatter(_fmt_k))
+    ax_main.set_ylabel("Monthly demand (units)", fontsize=11, fontweight="bold", labelpad=10)
+    ax_main.set_xlim(-0.5, h - 0.5)
+
+    ax_main.set_title(
+        "NutryWell + Acquired Portfolio — Monthly Demand & Forecast\n"
+        "September 2024 – September 2025",
+        fontsize=15, fontweight="bold", pad=14, color="#1B2A3B",
+    )
+
+    legend = ax_main.legend(
+        loc="upper left", fontsize=8.5, framealpha=0.92,
+        edgecolor="#CCCCCC", ncol=2, columnspacing=1.2,
+    )
+    legend.get_frame().set_linewidth(0.8)
+
+    # ── footer ────────────────────────────────────────────────────────────────
+    fig.text(
+        0.5, 0.01,
+        "Sources: Order_ERP.csv (NutryWell)  |  Orders_ERP_Parent_company.csv (Acquired)  "
+        "|  Methods: Holt-Winters additive  /  Linear + Additive Seasonality  "
+        "|  Selection: minimum RMSE  |  Buffer: +10 % above selected forecast",
+        ha="center", va="bottom", fontsize=7, color="#999999", style="italic",
+    )
+
+    # ── save ──────────────────────────────────────────────────────────────────
+    out_path = OUT_DIR / "demand_forecast_combined.png"
+    fig.savefig(out_path, dpi=160, bbox_inches="tight",
+                facecolor=fig.get_facecolor())
+    plt.close(fig)
+    print(f"\nSaved: {out_path}")
 
 
 if __name__ == "__main__":
