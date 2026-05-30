@@ -193,7 +193,7 @@ def main():
     fig = plt.figure(figsize=(17, 9.5))
     fig.patch.set_facecolor(BG)
 
-    fig.subplots_adjust(left=0.07, right=0.97, top=0.88, bottom=0.09)
+    fig.subplots_adjust(left=0.07, right=0.97, top=0.88, bottom=0.20)
     ax_main = fig.add_subplot(1, 1, 1)
     _style_ax(ax_main)
 
@@ -259,19 +259,11 @@ def main():
     )
 
     legend = ax_main.legend(
-        loc="upper left", fontsize=8.5, framealpha=0.92,
-        edgecolor="#CCCCCC", ncol=2, columnspacing=1.2,
+        loc="upper center", fontsize=11, framealpha=0.95,
+        edgecolor="#CCCCCC", ncol=3, columnspacing=1.4,
+        bbox_to_anchor=(0.5, -0.12), borderaxespad=0.0,
     )
     legend.get_frame().set_linewidth(0.8)
-
-    # ── footer ────────────────────────────────────────────────────────────────
-    fig.text(
-        0.5, 0.01,
-        "Sources: Order_ERP.csv (NutryWell)  |  Orders_ERP_Parent_company.csv (Acquired)  "
-        "|  Methods: Holt-Winters additive  /  Linear + Additive Seasonality  "
-        "|  Selection: minimum RMSE  |  Buffer: +10 % above selected forecast",
-        ha="center", va="bottom", fontsize=7, color="#999999", style="italic",
-    )
 
     # ── save ──────────────────────────────────────────────────────────────────
     out_path = OUT_DIR / "demand_forecast_combined.png"
