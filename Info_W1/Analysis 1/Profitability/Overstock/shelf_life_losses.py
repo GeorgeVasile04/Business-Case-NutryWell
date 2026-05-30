@@ -389,14 +389,14 @@ def main():
     y  = np.arange(n)
     bh = 0.32   # bar height
 
-    fig = plt.figure(figsize=(15, 2.5 + n * 0.85))
+    fig = plt.figure(figsize=(15, 2.0 + n * 1.05))
     fig.patch.set_facecolor(BG)
 
     gs = GridSpec(2, 1, figure=fig,
-                  height_ratios=[1, n],
-                  hspace=0.35,
-                  left=0.22, right=0.92,
-                  top=0.90, bottom=0.08)
+                  height_ratios=[0.75, n],
+                  hspace=0.10,
+                  left=0.18, right=0.92,
+                  top=0.93, bottom=0.06)
 
     ax_kpi  = fig.add_subplot(gs[0])
     ax_main = fig.add_subplot(gs[1])
@@ -412,12 +412,10 @@ def main():
     )
 
     kpis = [
-        (0.04, C_S1, "S1 — Actual ordering",
-         f"EUR {t_s1_e:,.0f}", f"{t_s1_u:,.0f} units wasted"),
-        (0.54, C_S2, "S2 — Holt-Winters +10 %",
-         f"EUR {t_s2_e:,.0f}", f"{t_s2_u:,.0f} units wasted"),
+        (0.04, C_S1, f"EUR {t_s1_e:,.0f}", f"{t_s1_u:,.0f} units wasted"),
+        (0.54, C_S2, f"EUR {t_s2_e:,.0f}", f"{t_s2_u:,.0f} units wasted"),
     ]
-    for bx, color, label, big, sub in kpis:
+    for bx, color, big, sub in kpis:
         card = mpatches.FancyBboxPatch(
             (bx, 0.04), 0.42, 0.88,
             boxstyle="round,pad=0.02",
@@ -427,14 +425,11 @@ def main():
         )
         ax_kpi.add_patch(card)
         cx = bx + 0.21
-        ax_kpi.text(cx, 0.78, label, ha="center", va="center",
-                    fontsize=9, fontweight="bold", color=color,
+        ax_kpi.text(cx, 0.62, big, ha="center", va="center",
+                    fontsize=20, fontweight="bold", color=color,
                     transform=ax_kpi.transAxes)
-        ax_kpi.text(cx, 0.46, big, ha="center", va="center",
-                    fontsize=18, fontweight="bold", color=color,
-                    transform=ax_kpi.transAxes)
-        ax_kpi.text(cx, 0.16, sub, ha="center", va="center",
-                    fontsize=8.5, color="#555555",
+        ax_kpi.text(cx, 0.24, sub, ha="center", va="center",
+                    fontsize=12, fontweight="bold", color=color,
                     transform=ax_kpi.transAxes)
 
     savings = t_s1_e - t_s2_e
@@ -480,9 +475,9 @@ def main():
                          va="center", ha="left", fontsize=8,
                          color=C_S2, style="italic", alpha=0.7)
 
-    # Y-axis labels: SKU + product name + shelf life
+    # Y-axis labels: SKU code + shelf life in months
     ylabels = [
-        f"{row['SKU']}  —  {row['Name']}\n(shelf life: {int(row['SL_months'])} months)"
+        f"{row['SKU']}  ({int(row['SL_months'])} months)"
         for _, row in df_loss.iterrows()
     ]
     ax_main.set_yticks(y)
@@ -499,14 +494,6 @@ def main():
     # Divider between each SKU pair
     for i in range(n - 1):
         ax_main.axhline(i + 0.5, color="white", lw=1.2, zorder=1)
-
-    fig.text(
-        0.5, 0.01,
-        "FEFO rules  |  SL >= 75 % : all channels  |  "
-        "25-75 % : e-commerce only  |  < 25 % : unsellable  |  "
-        "Loss = expired + at-risk stock valued at standard cost",
-        ha="center", fontsize=7, color="#999999", style="italic",
-    )
 
     png_path = OUT_DIR / "shelf_life_losses.png"
     fig.savefig(png_path, dpi=160, bbox_inches="tight", facecolor=BG)
